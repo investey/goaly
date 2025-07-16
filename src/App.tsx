@@ -428,6 +428,8 @@ function App() {
   const [categoryAffirmations, setCategoryAffirmations] = useState<typeof allAffirmations>([]);
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
@@ -450,6 +452,149 @@ function App() {
   useEffect(() => {
     localStorage.setItem('affirmation-pinned', JSON.stringify(pinnedPhrases));
   }, [pinnedPhrases]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'en-US';
+      recognitionInstance.maxAlternatives = 3;
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true);
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onresult = (event: any) => {
+        const results = Array.from(event.results);
+        
+        // Try multiple alternatives for better matching
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i] as any;
+          for (let j = 0; j < result.length; j++) {
+            const transcript = result[j].transcript.toLowerCase().trim();
+            const currentText = currentAffirmation.text.toLowerCase();
+            
+            // Check if spoken text matches (with fuzzy matching)
+            if (isTextMatch(transcript, currentText)) {
+              fillAllLettersGradually();
+              return;
+            }
+          }
+        }
+        
+        // If no match found, you could add feedback here
+        console.log('No match found for spoken text');
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  }, [currentAffirmation]);
+
+  // Fuzzy text matching function
+  const isTextMatch = (spoken: string, target: string): boolean => {
+    // Remove punctuation and extra spaces
+    const cleanSpoken = spoken.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    const cleanTarget = target.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    
+    // Exact match
+    if (cleanSpoken === cleanTarget) return true;
+    
+    // Word-by-word matching (allows for small differences)
+    const spokenWords = cleanSpoken.split(' ');
+    const targetWords = cleanTarget.split(' ');
+    
+    if (spokenWords.length !== targetWords.length) return false;
+    
+    let matchCount = 0;
+    for (let i = 0; i < targetWords.length; i++) {
+      const spokenWord = spokenWords[i];
+      const targetWord = targetWords[i];
+      
+      // Exact word match
+      if (spokenWord === targetWord) {
+        matchCount++;
+      }
+      // Similar word match (handles pronunciation variations)
+      else if (isWordSimilar(spokenWord, targetWord)) {
+        matchCount++;
+      }
+    }
+    
+    // Require at least 80% word match
+    return matchCount / targetWords.length >= 0.8;
+  };
+
+  // Check if two words are similar (handles common speech recognition errors)
+  const isWordSimilar = (word1: string, word2: string): boolean => {
+    if (Math.abs(word1.length - word2.length) > 2) return false;
+    
+    // Simple edit distance check
+    let differences = 0;
+    const maxLength = Math.max(word1.length, word2.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+      if (word1[i] !== word2[i]) differences++;
+    }
+    
+    // Allow up to 2 character differences for short words, more for longer words
+    const allowedDifferences = Math.max(1, Math.floor(maxLength * 0.3));
+    return differences <= allowedDifferences;
+  };
+
+  // Fill all letters gradually to simulate natural interaction
+  const fillAllLettersGradually = () => {
+    if (isResetting) return;
+    
+    const letterIndices = letters
+      .map((char, index) => char !== ' ' ? index : -1)
+      .filter(index => index !== -1);
+    
+    // Clear any existing letters first
+    setClickedLetters(new Set());
+    
+    // Fill letters gradually with small delays
+    letterIndices.forEach((letterIndex, arrayIndex) => {
+      setTimeout(() => {
+        setClickedLetters(prev => new Set([...prev, letterIndex]));
+      }, arrayIndex * 50); // 50ms delay between each letter
+    });
+  };
+
+  // Handle microphone click
+  const handleMicrophoneClick = () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in this browser. Please try Chrome, Safari, or Edge.');
+      return;
+    }
+    
+    if (isListening) {
+      recognition.stop();
+    } else {
+      // Reset any existing progress
+      setClickedLetters(new Set());
+      setShowHearts(false);
+      
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        setIsListening(false);
+      }
+    }
+  };
 
   // Search functionality
   const handleSearch = (query: string) => {
@@ -1197,10 +1342,13 @@ function App() {
         
         {/* Microphone Icon */}
         <button
-          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+          onClick={handleMicrophoneClick}
+          className={`p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200 ${
+            isListening ? 'bg-red-500 bg-opacity-80' : ''
+          }`}
         >
           <svg 
-            className="w-6 h-6 text-gray-700" 
+            className={`w-6 h-6 ${isListening ? 'text-white animate-pulse' : 'text-gray-700'}`}
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
