@@ -1,0 +1,86 @@
+GOALY APP - ICON POSITIONS AND FUNCTIONALITY
+
+==============================================
+
+TOP NAVIGATION BAR (Left to Right)
+==============================================
+
+1. GOALY BUTTON (Top Left)
+The 'Goaly' text button in the top left corner returns you to the main feed with a fresh random affirmation. Click it anytime to get a new affirmation and reset your interaction state.
+
+2. BOOKMARKS ICON (Top Navigation)
+The bookmark/save icon in the top navigation opens your saved affirmations list. All your bookmarked affirmations are stored here, with pinned items appearing at the top.
+
+3. PLUS ICON (Top Navigation)
+The plus icon generates a new random affirmation instantly. It's the same as scrolling up or swiping up for a new affirmation.
+
+4. SEARCH ICON (Top Navigation)
+The search icon opens the search page where you can search for specific affirmations or browse by topics like Love, Wealth, Health, and Learning.
+
+5. MENU ICON (Top Right)
+The three-line menu icon (hamburger menu) in the top right corner opens additional app settings and options.
+
+==============================================
+
+RIGHT SIDE EDGE ICONS
+==============================================
+
+6. BOOKMARK ICON (Right Edge)
+The bookmark icon on the right edge saves the current affirmation to your bookmarks list. It turns blue with a checkmark when the affirmation is already bookmarked.
+
+7. SHARE/LINK ICON (Right Edge)
+The link icon below the bookmark creates a shareable URL for the current affirmation and copies it to your clipboard. Share your favorite affirmations with others!
+
+==============================================
+
+BOOKMARKS PAGE ICONS
+==============================================
+
+8. THUMBTACK/PIN ICON (Bookmarks Page)
+The thumbtack icon next to each bookmark pins that affirmation to the top of your bookmarks list. Pinned items appear first and the thumbtack turns blue when active.
+
+9. X DELETE ICON (Bookmarks Page)
+The X icon on the right side of each bookmark deletes that affirmation from your saved list. A confirmation dialog will appear before deletion.
+
+10. BACK ARROW (Bookmarks/Search Pages)
+The back arrow in the top left returns you to the main affirmation view from the bookmarks or search pages.
+
+==============================================
+
+MAIN INTERACTION
+==============================================
+
+11. LETTER TRACING/CLICKING
+Click or trace over each letter in the affirmation to make it glow with colored effects. Complete all letters to trigger a burst animation with hearts, dollar bills, health icons, or stars depending on the affirmation category.
+
+12. SCROLL/SWIPE NAVIGATION
+Scroll up or swipe up to get a new random affirmation. Scroll down or swipe down to go back to the previous affirmation in your history (up to 10 previous affirmations are remembered).
+
+==============================================
+
+CATEGORY-SPECIFIC EFFECTS
+==============================================
+
+13. COLOR-CODED CATEGORIES
+Affirmations glow in different colors based on their category:
+- Pink for Love & Self-Love
+- Green for Wealth & Business  
+- Blue for Health & Fitness
+- Yellow for Learning & Growth
+
+The burst animations also use category-specific icons (hearts, dollar bills, health icons, or stars).
+
+==============================================
+
+ADDITIONAL FEATURES
+==============================================
+
+- Bookmarks are automatically saved to your browser's local storage
+- Pinned bookmarks stay at the top of your list
+- Share links allow others to view specific affirmations
+- Up to 10 previous affirmations are kept in history for navigation
+- All interactions are touch-friendly for mobile devices
+
+==============================================
+End of Instructions
+==============================================
