@@ -1194,6 +1194,25 @@ function App() {
         >
           <Link className="w-6 h-6 text-gray-700" />
         </button>
+        
+        {/* Microphone Icon */}
+        <button
+          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+        >
+          <svg 
+            className="w-6 h-6 text-gray-700" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" 
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Copy Alert */}
