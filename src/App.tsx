@@ -430,6 +430,7 @@ function App() {
   const [showPlusPopup, setShowPlusPopup] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
+  const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [recognition, setRecognition] = useState<any>(null);
@@ -592,12 +593,14 @@ function App() {
 
   const handleMicrophoneMouseDown = () => {
     setHoldStartTime(Date.now());
+    setWasHoldActivated(false);
     const timer = setTimeout(() => {
-      // After 5 seconds, enable continuous mode and start listening
+      // After 3 seconds, enable continuous mode
       setIsContinuousMode(true);
+      setWasHoldActivated(true);
       startListening();
       console.log('Continuous listening mode enabled');
-    }, 5000);
+    }, 3000);
   const handleMicrophoneMouseUp = () => {
     const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
     
@@ -606,7 +609,23 @@ function App() {
       setHoldTimer(null);
     }
     
+    
+    // If it was a quick tap (not a hold), start single-use listening
+    if (!wasHoldActivated && holdStartTime) {
+      const holdDuration = Date.now() - holdStartTime;
+      if (holdDuration < 3000) {
+        // Quick tap - single use listening
+        if (recognition) {
+          recognition.continuous = false;
+          recognition.interimResults = false;
+        }
+        setIsContinuousMode(false);
+        startListening();
+      }
+    }
+    
     setHoldStartTime(null);
+    setWasHoldActivated(false);
     
       startListening();
     }
@@ -654,7 +673,9 @@ function App() {
       return;
     }
     
-    if (isListening) {
+    if (isContinuousMode && isListening) {
+      // If in continuous mode, stop continuous listening
+      setIsContinuousMode(false);
       recognition.stop();
       return;
     }
@@ -662,8 +683,17 @@ function App() {
     if (isContinuousMode) {
       // Stop continuous mode
       stopListening();
-      return;
-    }
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
+    } else if (!isListening && !isContinuousMode) {
+      // If not listening and not in continuous mode, start single-use listening
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
+      startListening();
     
     // Configure recognition based on mode
     recognition.continuous = isContinuousMode;
