@@ -571,13 +571,11 @@ function App() {
   const handleMicrophoneMouseDown = () => {
     setHoldStartTime(Date.now());
     const timer = setTimeout(() => {
-      // After 4 seconds, enable continuous mode
+      // After 5 seconds, enable continuous mode and start listening
       setIsContinuousMode(true);
+      startListening();
       console.log('Continuous listening mode enabled');
     }, 5000);
-    setHoldTimer(timer);
-  };
-
   const handleMicrophoneMouseUp = () => {
     const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
     
@@ -588,14 +586,9 @@ function App() {
     
     setHoldStartTime(null);
     
-    if (holdDuration < 5000) {
-      // Short press - normal single listening
-      setIsContinuousMode(false);
-      startListening();
-    } else {
-      // Long press - start continuous mode
       startListening();
     }
+    // If holdDuration >= 5000, continuous mode was already started in the timeout
   };
 
   // Fuzzy text matching function
@@ -687,9 +680,14 @@ function App() {
       return;
     }
     
+    // Configure recognition based on mode
+    recognition.continuous = isContinuousMode;
+    recognition.interimResults = true;
+    
     // Reset any existing progress
     setClickedLetters(new Set());
     setShowHearts(false);
+    setIsListening(true);
     
     try {
       // Check if recognition is already running before starting
@@ -712,6 +710,7 @@ function App() {
   // Search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+      recognition.continuous = false;
     if (query.trim() === '') {
       setSearchResults([]);
       return;
