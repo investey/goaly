@@ -571,6 +571,7 @@ function App() {
         if (isContinuousMode) {
           setTimeout(() => {
             generateNewPhrase();
+            recognition.stop();
           }, 2000); // Wait 2 seconds after animation completes
         }
       }
@@ -593,6 +594,7 @@ function App() {
         setIsListening(false);
         setIsContinuousMode(false);
       }
+      setIsProcessing(false);
     };
 
     recognition.onend = () => {
