@@ -432,7 +432,6 @@ function App() {
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
@@ -545,14 +544,12 @@ function App() {
 
     recognition.onstart = () => {
       setIsListening(true);
-      setIsProcessing(false);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          setIsProcessing(true);
           transcript += event.results[i][0].transcript;
         }
       }
@@ -571,7 +568,6 @@ function App() {
         if (isContinuousMode) {
           setTimeout(() => {
             generateNewPhrase();
-            recognition.stop();
           }, 2000); // Wait 2 seconds after animation completes
         }
       }
@@ -594,7 +590,6 @@ function App() {
         setIsListening(false);
         setIsContinuousMode(false);
       }
-      setIsProcessing(false);
     };
 
     recognition.onend = () => {
@@ -616,7 +611,6 @@ function App() {
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       setIsListening(false);
-      setIsProcessing(false);
     }
   };
 
