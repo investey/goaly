@@ -554,6 +554,9 @@ function App() {
         }
       }
       
+      // Stop flashing after processing the sentence
+      setIsProcessing(false);
+      
       transcript = transcript.toLowerCase().trim();
       if (!transcript) return;
       
