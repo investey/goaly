@@ -576,7 +576,11 @@ function App() {
       // After 3 seconds, enable continuous mode
       setIsContinuousMode(true);
       setWasHoldActivated(true);
-      startListening();
+      if (recognition) {
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.start();
+      }
       console.log('Continuous listening mode enabled');
     }, 3000);
     setHoldTimer(timer);
@@ -592,32 +596,20 @@ function App() {
     
     setHoldStartTime(null);
     
-    // If it was a quick tap (not a hold), start single-use listening
-    if (!wasHoldActivated && holdStartTime) {
-      const holdDuration = Date.now() - holdStartTime;
-      if (holdDuration < 3000) {
-        // Quick tap - single use listening
-        if (recognition) {
-          recognition.continuous = false;
-          recognition.interimResults = false;
-        }
-        setIsContinuousMode(false);
-        startListening();
-      }
-    }
-    
-    setWasHoldActivated(false);
-    
-    if (holdDuration < 5000) {
-      // Short press - normal single listening
-      setIsContinuousMode(false);
+    // If it was a quick tap (less than 3 seconds) and hold wasn't activated
+    if (holdDuration < 3000 && !wasHoldActivated) {
+      // Start single-use listening
       if (recognition) {
         recognition.continuous = false;
         recognition.interimResults = false;
+        recognition.start();
       }
-      startListening();
     }
-    // If holdDuration >= 5000, continuous mode was already started in the timeout
+    
+    // Reset hold activation flag after a short delay to allow continuous mode to fully activate
+    setTimeout(() => {
+      setWasHoldActivated(false);
+    }, 100);
   };
 
   // Fuzzy text matching function
