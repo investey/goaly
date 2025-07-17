@@ -684,7 +684,16 @@ function App() {
       setShowHearts(false);
       
       try {
-        recognition.start();
+        // Check if recognition is already running before starting
+        if (recognition.recognizing) {
+          recognition.stop();
+          // Wait a moment before starting again
+          setTimeout(() => {
+            recognition.start();
+          }, 100);
+        } else {
+          recognition.start();
+        }
       } catch (error) {
         console.error('Error starting speech recognition:', error);
         setIsListening(false);
