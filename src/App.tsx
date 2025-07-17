@@ -676,31 +676,28 @@ function App() {
       return;
     }
     
-    if (isListening || recognition.recognizing) {
+    // Check if recognition is already running
+    if (isListening || (recognition && recognition.recognizing)) {
       recognition.stop();
-    } else {
-      // Reset any existing progress
-      setClickedLetters(new Set());
-      setShowHearts(false);
-      
-      try {
-        // Only start if not already recognizing
-        if (!recognition.recognizing) {
-          recognition.start();
-        }
-        if (recognition.recognizing) {
-          recognition.stop();
-          // Wait a moment before starting again
-          setTimeout(() => {
-            recognition.start();
-          }, 100);
-        } else {
-          recognition.start();
-        }
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-        setIsListening(false);
-      }
+      return;
+    }
+    
+    if (isContinuousMode) {
+      // Stop continuous mode
+      stopListening();
+      setIsContinuousMode(false);
+      return;
+    }
+    
+    // Reset any existing progress
+    setClickedLetters(new Set());
+    setShowHearts(false);
+    
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      setIsListening(false);
     }
   };
 
