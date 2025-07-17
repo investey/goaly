@@ -429,6 +429,7 @@ function App() {
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
@@ -544,6 +545,7 @@ function App() {
 
     recognition.onstart = () => {
       setIsListening(true);
+      setIsProcessing(false);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -575,6 +577,8 @@ function App() {
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      setIsProcessing(false);
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
         // Restart recognition for these recoverable errors in continuous mode
         if (isContinuousMode) {
@@ -594,6 +598,8 @@ function App() {
 
     recognition.onend = () => {
       console.log('Recognition ended, continuous mode:', isContinuousMode);
+      setIsListening(false);
+      setIsProcessing(false);
       if (isContinuousMode) {
         // Restart recognition in continuous mode
         setTimeout(() => {
@@ -615,15 +621,12 @@ function App() {
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
     if (recognitionInstance) {
       recognitionInstance.stop();
       setRecognitionInstance(null);
     }
     setIsListening(false);
+    setIsProcessing(false);
     setIsContinuousMode(false);
   };
 
@@ -656,11 +659,6 @@ function App() {
 
   const toggleListening = () => {
     if (isListening) {
-      // Force stop recognition when turning off
-      if (recognitionRef.current) {
-        recognitionRef.current.abort(); // Use abort() for immediate stop
-        recognitionRef.current = null;
-      }
       stopListening();
     } else {
       setIsContinuousMode(false);
@@ -1414,13 +1412,13 @@ function App() {
           className={`p-3 rounded-full hover:scale-110 transition-all duration-200 ${
             isContinuousMode
               ? 'bg-green-500 animate-pulse'
-              : isListening 
+              : isListening || isProcessing
                 ? 'bg-red-500 animate-pulse' 
                 : 'bg-white/20 backdrop-blur-sm hover:bg-white/30'
           }`}
         >
           <svg 
-            className={`w-6 h-6 ${isListening ? 'text-white animate-pulse' : 'text-gray-700'}`}
+            className={`w-6 h-6 ${isListening || isProcessing ? 'text-white animate-pulse' : 'text-gray-700'}`}
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
