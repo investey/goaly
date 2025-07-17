@@ -615,6 +615,10 @@ function App() {
   };
 
   const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
     if (recognitionInstance) {
       recognitionInstance.stop();
       setRecognitionInstance(null);
@@ -652,6 +656,11 @@ function App() {
 
   const toggleListening = () => {
     if (isListening) {
+      // Force stop recognition when turning off
+      if (recognitionRef.current) {
+        recognitionRef.current.abort(); // Use abort() for immediate stop
+        recognitionRef.current = null;
+      }
       stopListening();
     } else {
       setIsContinuousMode(false);
