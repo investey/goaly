@@ -607,6 +607,17 @@ function App() {
     }
     
     setWasHoldActivated(false);
+    
+    if (holdDuration < 5000) {
+      // Short press - normal single listening
+      setIsContinuousMode(false);
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
+      startListening();
+    }
+    // If holdDuration >= 5000, continuous mode was already started in the timeout
   };
 
   // Fuzzy text matching function
@@ -672,11 +683,6 @@ function App() {
         setClickedLetters(prev => new Set([...prev, index]));
       }, i * 50); // 50ms delay between each letter
     });
-    
-    // Show hearts after all letters are filled
-    setTimeout(() => {
-      setShowHearts(true);
-    }, nonSpaceIndices.length * 50 + 500);
   };
 
   const handleMicrophoneClick = () => {
@@ -695,13 +701,42 @@ function App() {
     if (isContinuousMode) {
       // Stop continuous mode
       stopListening();
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
     } else if (!isListening && !isContinuousMode) {
       // If not listening and not in continuous mode, start single-use listening
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
       startListening();
+    }
+    
+    // Configure recognition based on mode
+    recognition.continuous = isContinuousMode;
+    recognition.interimResults = true;
+    
+    // Reset any existing progress
+    setClickedLetters(new Set());
+    setShowHearts(false);
+    setIsListening(true);
+    
+    try {
+      // Check if recognition is already running before starting
+      if (recognition.recognizing) {
+        recognition.stop();
+        // Wait a moment before starting again
+        setTimeout(() => {
+          recognition.start();
+        }, 100);
+      } else {
+        recognition.start();
+      }
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      setIsListening(false);
     }
   };
 
