@@ -663,43 +663,6 @@ function App() {
   };
 
   // Check if two words are similar (handles common speech recognition errors)
-  const isWordSimilar = (word1: string, word2: string): boolean => {
-    if (Math.abs(word1.length - word2.length) > 2) return false;
-    
-    // Simple edit distance check
-    let differences = 0;
-    const maxLength = Math.max(word1.length, word2.length);
-    
-    for (let i = 0; i < maxLength; i++) {
-      if (word1[i] !== word2[i]) differences++;
-    }
-    
-    // Allow up to 2 character differences for short words, more for longer words
-    const allowedDifferences = Math.max(1, Math.floor(maxLength * 0.3));
-    return differences <= allowedDifferences;
-  };
-
-  // Fill all letters gradually to simulate natural interaction
-  const fillAllLettersGradually = () => {
-    if (isResetting) return;
-    
-    const letters = currentAffirmation.text.split('');
-    const letterIndices = letters
-      .map((char, index) => char !== ' ' ? index : -1)
-      .filter(index => index !== -1);
-    
-    // Clear any existing letters first
-    setClickedLetters(new Set());
-    
-    // Fill letters gradually with small delays
-    letterIndices.forEach((letterIndex, arrayIndex) => {
-      setTimeout(() => {
-        setClickedLetters(prev => new Set([...prev, letterIndex]));
-      }, arrayIndex * 50); // 50ms delay between each letter
-    });
-  };
-
-  // Handle microphone click
   const handleMicrophoneClick = () => {
     if (!recognition) {
       alert('Speech recognition is not supported in this browser. Please try Chrome, Safari, or Edge.');
