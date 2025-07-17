@@ -203,23 +203,6 @@ const App: React.FC = () => {
     };
   }, [isListening]);
 
-  const triggerFullAnimation = useCallback(() => {
-    // Mark all letters as clicked
-    const allLetters = new Set<number>();
-    for (let i = 0; i < currentAffirmation.text.length; i++) {
-      if (currentAffirmation.text[i] !== ' ') {
-        allLetters.add(i);
-      }
-    }
-    setClickedLetters(allLetters);
-    
-    // Trigger burst animation
-    setTimeout(() => {
-      setShowBurst(true);
-      setTimeout(() => setShowBurst(false), 3000);
-    }, 500);
-  }, [currentAffirmation]);
-
   const processSpeechResult = useCallback((transcript: string) => {
     console.log('Processing speech result:', transcript);
     console.log('Current affirmation:', currentAffirmation.text);
@@ -279,6 +262,23 @@ const App: React.FC = () => {
       console.log('❌ Not enough matches to trigger animation');
     }
   }, [currentAffirmation, triggerFullAnimation]);
+
+  const triggerFullAnimation = useCallback(() => {
+    // Mark all letters as clicked
+    const allLetters = new Set<number>();
+    for (let i = 0; i < currentAffirmation.text.length; i++) {
+      if (currentAffirmation.text[i] !== ' ') {
+        allLetters.add(i);
+      }
+    }
+    setClickedLetters(allLetters);
+    
+    // Trigger burst animation
+    setTimeout(() => {
+      setShowBurst(true);
+      setTimeout(() => setShowBurst(false), 3000);
+    }, 500);
+  }, [currentAffirmation]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
