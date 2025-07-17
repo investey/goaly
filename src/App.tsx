@@ -546,8 +546,13 @@ function App() {
     setClickedLetters(new Set());
     setShowHearts(false);
     
+    // Configure recognition settings
+    recognition.continuous = isContinuousMode;
+    recognition.interimResults = true;
+    
     try {
       recognition.start();
+      setIsListening(true);
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       setIsListening(false);
@@ -557,6 +562,7 @@ function App() {
   const stopListening = () => {
     if (recognition) {
       recognition.stop();
+      recognition.continuous = false;
     }
     setIsListening(false);
     setIsContinuousMode(false);
@@ -567,11 +573,8 @@ function App() {
     const timer = setTimeout(() => {
       // After 4 seconds, enable continuous mode
       setIsContinuousMode(true);
-      if (recognition) {
-        recognition.continuous = true;
-      }
       console.log('Continuous listening mode enabled');
-    }, 4000);
+    }, 5000);
     setHoldTimer(timer);
   };
 
@@ -585,12 +588,9 @@ function App() {
     
     setHoldStartTime(null);
     
-    if (holdDuration < 4000) {
+    if (holdDuration < 5000) {
       // Short press - normal single listening
       setIsContinuousMode(false);
-      if (recognition) {
-        recognition.continuous = false;
-      }
       startListening();
     } else {
       // Long press - start continuous mode
