@@ -429,10 +429,10 @@ function App() {
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
