@@ -676,7 +676,7 @@ function App() {
       return;
     }
     
-    if (isListening) {
+    if (isListening || recognition.recognizing) {
       recognition.stop();
     } else {
       // Reset any existing progress
@@ -684,7 +684,10 @@ function App() {
       setShowHearts(false);
       
       try {
-        // Check if recognition is already running before starting
+        // Only start if not already recognizing
+        if (!recognition.recognizing) {
+          recognition.start();
+        }
         if (recognition.recognizing) {
           recognition.stop();
           // Wait a moment before starting again
