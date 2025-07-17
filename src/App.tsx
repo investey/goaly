@@ -677,7 +677,6 @@ function App() {
     }
     
     if (isListening || (recognition && recognition.recognizing)) {
-    if (isListening || (recognition && recognition.recognizing)) {
       recognition.stop();
       return;
     }
@@ -685,10 +684,6 @@ function App() {
     if (isContinuousMode) {
       // Stop continuous mode
       stopListening();
-        // Only start if not already recognizing
-        if (!recognition.recognizing) {
-          recognition.start();
-        }
       return;
     }
     
@@ -1597,3 +1592,5 @@ function App() {
 }
 
 export default App;
+
+/* Letter sparkle and glow effects for Love (Pink) */
