@@ -571,6 +571,43 @@ function App() {
   const handleMicrophoneMouseDown = () => {
     setHoldStartTime(Date.now());
     const timer = setTimeout(() => {
+      // After 5 seconds, enable continuous mode
+      setIsContinuousMode(true);
+      if (recognition) {
+        recognition.continuous = true;
+        recognition.interimResults = true;
+      }
+      startListening();
+      console.log('Continuous listening mode enabled');
+    }, 5000);
+    setHoldTimer(timer);
+  };
+
+  const handleMicrophoneMouseUp = () => {
+    const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
+    
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      setHoldTimer(null);
+    }
+    
+    setHoldStartTime(null);
+    
+    if (holdDuration < 5000) {
+      // Short press - normal single listening
+      setIsContinuousMode(false);
+      if (recognition) {
+        recognition.continuous = false;
+        recognition.interimResults = false;
+      }
+      startListening();
+    }
+    // Long press handling is done in the timeout above
+  };
+
+  const handleMicrophoneMouseDown = () => {
+    setHoldStartTime(Date.now());
+    const timer = setTimeout(() => {
       // After 5 seconds, enable continuous mode and start listening
       setIsContinuousMode(true);
       startListening();
