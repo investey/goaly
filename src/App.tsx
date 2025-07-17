@@ -676,7 +676,7 @@ function App() {
       return;
     }
     
-    // Check if recognition is already running
+    if (isListening || (recognition && recognition.recognizing)) {
     if (isListening || (recognition && recognition.recognizing)) {
       recognition.stop();
       return;
@@ -685,7 +685,10 @@ function App() {
     if (isContinuousMode) {
       // Stop continuous mode
       stopListening();
-      setIsContinuousMode(false);
+        // Only start if not already recognizing
+        if (!recognition.recognizing) {
+          recognition.start();
+        }
       return;
     }
     
