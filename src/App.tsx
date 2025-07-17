@@ -568,21 +568,6 @@ function App() {
     setIsContinuousMode(false);
   };
 
-  const handleMicrophoneMouseDown = () => {
-    setHoldStartTime(Date.now());
-    const timer = setTimeout(() => {
-      // After 5 seconds, enable continuous mode
-      setIsContinuousMode(true);
-      if (recognition) {
-        recognition.continuous = true;
-        recognition.interimResults = true;
-      }
-      startListening();
-      console.log('Continuous listening mode enabled');
-    }, 5000);
-    setHoldTimer(timer);
-  };
-
   const handleMicrophoneMouseUp = () => {
     const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
     
