@@ -1453,7 +1453,7 @@ function App() {
             <button
               onClick={() => setShowPlusPopup(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-            >
+            <button onClick={() => setError('')} className="text-white hover:text-gray-200">
               <X className="w-6 h-6" />
             </button>
             
