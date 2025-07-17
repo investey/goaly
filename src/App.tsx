@@ -569,28 +569,6 @@ function App() {
     setIsContinuousMode(false);
   };
 
-  const handleMicrophoneMouseUp = () => {
-    const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
-    
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      setHoldTimer(null);
-    }
-    
-    setHoldStartTime(null);
-    
-    if (holdDuration < 5000) {
-      // Short press - normal single listening
-      setIsContinuousMode(false);
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
-      }
-      startListening();
-    }
-    // Long press handling is done in the timeout above
-  };
-
   const handleMicrophoneMouseDown = () => {
     setHoldStartTime(Date.now());
     setWasHoldActivated(false);
@@ -601,6 +579,9 @@ function App() {
       startListening();
       console.log('Continuous listening mode enabled');
     }, 3000);
+    setHoldTimer(timer);
+  };
+
   const handleMicrophoneMouseUp = () => {
     const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
     
@@ -609,6 +590,7 @@ function App() {
       setHoldTimer(null);
     }
     
+    setHoldStartTime(null);
     
     // If it was a quick tap (not a hold), start single-use listening
     if (!wasHoldActivated && holdStartTime) {
@@ -624,12 +606,7 @@ function App() {
       }
     }
     
-    setHoldStartTime(null);
     setWasHoldActivated(false);
-    
-      startListening();
-    }
-    // If holdDuration >= 5000, continuous mode was already started in the timeout
   };
 
   // Fuzzy text matching function
@@ -667,6 +644,41 @@ function App() {
   };
 
   // Check if two words are similar (handles common speech recognition errors)
+  const isWordSimilar = (word1: string, word2: string): boolean => {
+    // Simple similarity check - you could enhance this with more sophisticated algorithms
+    if (Math.abs(word1.length - word2.length) > 2) return false;
+    
+    let differences = 0;
+    const maxLength = Math.max(word1.length, word2.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+      if (word1[i] !== word2[i]) {
+        differences++;
+      }
+    }
+    
+    return differences <= 2; // Allow up to 2 character differences
+  };
+
+  const fillAllLettersGradually = () => {
+    const nonSpaceIndices = letters
+      .map((char, index) => ({ char, index }))
+      .filter(({ char }) => char !== ' ')
+      .map(({ index }) => index);
+    
+    // Fill letters gradually with animation
+    nonSpaceIndices.forEach((index, i) => {
+      setTimeout(() => {
+        setClickedLetters(prev => new Set([...prev, index]));
+      }, i * 50); // 50ms delay between each letter
+    });
+    
+    // Show hearts after all letters are filled
+    setTimeout(() => {
+      setShowHearts(true);
+    }, nonSpaceIndices.length * 50 + 500);
+  };
+
   const handleMicrophoneClick = () => {
     if (!recognition) {
       alert('Speech recognition is not supported in this browser. Please try Chrome, Safari, or Edge.');
@@ -683,49 +695,19 @@ function App() {
     if (isContinuousMode) {
       // Stop continuous mode
       stopListening();
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
-      }
+      recognition.continuous = false;
+      recognition.interimResults = false;
     } else if (!isListening && !isContinuousMode) {
       // If not listening and not in continuous mode, start single-use listening
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
-      }
+      recognition.continuous = false;
+      recognition.interimResults = false;
       startListening();
-    
-    // Configure recognition based on mode
-    recognition.continuous = isContinuousMode;
-    recognition.interimResults = true;
-    
-    // Reset any existing progress
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsListening(true);
-    
-    try {
-      // Check if recognition is already running before starting
-      if (recognition.recognizing) {
-        recognition.stop();
-        // Wait a moment before starting again
-        setTimeout(() => {
-          recognition.start();
-        }, 100);
-      } else {
-        recognition.start();
-      }
-      recognition.start();
-    } catch (error) {
-      console.error('Error starting speech recognition:', error);
-      setIsListening(false);
     }
   };
 
   // Search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-      recognition.continuous = false;
     if (query.trim() === '') {
       setSearchResults([]);
       return;
@@ -1614,3 +1596,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
