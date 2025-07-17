@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
@@ -431,9 +431,8 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
-  const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
-  const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
@@ -456,161 +455,6 @@ function App() {
   useEffect(() => {
     localStorage.setItem('affirmation-pinned', JSON.stringify(pinnedPhrases));
   }, [pinnedPhrases]);
-
-  // Initialize speech recognition
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
-      
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = false;
-      recognitionInstance.lang = 'en-US';
-      
-      recognitionInstance.onstart = () => {
-        setIsListening(true);
-      };
-      
-      recognitionInstance.onresult = (event: any) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        console.log('Speech recognized:', transcript);
-        
-        // Get current affirmation text
-        const currentText = currentAffirmation.text.toLowerCase();
-        
-        // Check if the spoken text matches the affirmation (with fuzzy matching)
-        if (isTextMatch(transcript, currentText)) {
-          console.log('Match found! Filling letters...');
-          fillAllLettersGradually();
-          
-          // In continuous mode, get new affirmation after successful match
-          if (isContinuousMode) {
-            setTimeout(() => {
-              generateNewPhrase();
-            }, 2000); // Wait 2 seconds after animation completes
-          }
-          // Don't stop recognition after successful match - keep listening
-        } else {
-          console.log('No match found');
-        }
-      };
-      
-      recognitionInstance.onerror = (event: any) => {
-        console.log('Speech recognition error:', event.error);
-        if (event.error === 'aborted' || event.error === 'not-allowed') {
-          setIsListening(false);
-        } else {
-          // For other errors, try to restart after a brief delay
-          setTimeout(() => {
-            if (isListening) {
-              try {
-                recognitionInstance.start();
-              } catch (e) {
-                console.log('Failed to restart recognition:', e);
-                setIsListening(false);
-              }
-            }
-          }, 1000);
-        }
-      };
-      
-      recognitionInstance.onend = () => {
-        console.log('Speech recognition ended');
-        if (isListening && !isContinuousMode) {
-          // Restart recognition if we're still supposed to be listening
-          setTimeout(() => {
-            if (isListening) {
-              try {
-                recognitionInstance.start();
-              } catch (e) {
-                console.log('Failed to restart recognition:', e);
-                setIsListening(false);
-              }
-            }
-          }, 500);
-        } else {
-          setIsListening(false);
-        }
-      };
-      
-      setRecognition(recognitionInstance);
-    }
-  }, [currentAffirmation, isListening, isContinuousMode]);
-
-  const startListening = () => {
-    if (!recognition) {
-      console.log('Speech recognition not available');
-      return;
-    }
-    
-    // Reset any existing progress
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    
-    // Configure recognition settings
-    recognition.continuous = isContinuousMode;
-    recognition.interimResults = true;
-    
-    try {
-      recognition.start();
-      setIsListening(true);
-    } catch (error) {
-      console.error('Error starting speech recognition:', error);
-      setIsListening(false);
-    }
-  };
-
-  const stopListening = () => {
-    if (recognition) {
-      recognition.stop();
-      recognition.continuous = false;
-    }
-    setIsListening(false);
-    setIsContinuousMode(false);
-  };
-
-  const handleMicrophoneMouseDown = () => {
-    setHoldStartTime(Date.now());
-    setWasHoldActivated(false);
-    const timer = setTimeout(() => {
-      // After 3 seconds, enable continuous mode
-      setIsContinuousMode(true);
-      setWasHoldActivated(true);
-      if (recognition) {
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.start();
-      }
-      console.log('Continuous listening mode enabled');
-    }, 3000);
-    setHoldTimer(timer);
-  };
-
-  const handleMicrophoneMouseUp = () => {
-    const holdDuration = holdStartTime ? Date.now() - holdStartTime : 0;
-    
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      setHoldTimer(null);
-    }
-    
-    setHoldStartTime(null);
-    
-    // If it was a quick tap (less than 3 seconds) and hold wasn't activated
-    if (holdDuration < 3000 && !wasHoldActivated) {
-      // Start single-use listening
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.start();
-      }
-    }
-    
-    // Reset hold activation flag after a short delay to allow continuous mode to fully activate
-    setTimeout(() => {
-      setWasHoldActivated(false);
-    }, 100);
-  };
 
   // Fuzzy text matching function
   const isTextMatch = (spoken: string, target: string): boolean => {
@@ -664,6 +508,7 @@ function App() {
   };
 
   const fillAllLettersGradually = () => {
+    const letters = currentAffirmation.text.split('');
     const nonSpaceIndices = letters
       .map((char, index) => ({ char, index }))
       .filter(({ char }) => char !== ' ')
@@ -677,58 +522,140 @@ function App() {
     });
   };
 
-  const handleMicrophoneClick = () => {
-    if (!recognition) {
-      alert('Speech recognition is not supported in this browser. Please try Chrome, Safari, or Edge.');
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser');
       return;
     }
-    
-    if (isContinuousMode && isListening) {
-      // If in continuous mode, stop continuous listening
-      setIsContinuousMode(false);
-      recognition.stop();
-      return;
+
+    // Stop any existing recognition first
+    if (recognitionInstance) {
+      recognitionInstance.stop();
     }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    setRecognitionInstance(recognition);
     
-    if (isContinuousMode) {
-      // Stop continuous mode
-      stopListening();
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          transcript += event.results[i][0].transcript;
+        }
       }
-    } else if (!isListening && !isContinuousMode) {
-      // If not listening and not in continuous mode, start single-use listening
-      if (recognition) {
-        recognition.continuous = false;
-        recognition.interimResults = false;
+      
+      transcript = transcript.toLowerCase().trim();
+      if (!transcript) return;
+      
+      console.log('Speech recognized:', transcript);
+      
+      // Check if the transcript matches the current affirmation
+      if (isTextMatch(transcript, currentAffirmation.text)) {
+        console.log('Match found! Filling letters...');
+        fillAllLettersGradually();
+        
+        // In continuous mode, get new affirmation after successful match
+        if (isContinuousMode) {
+          setTimeout(() => {
+            generateNewPhrase();
+          }, 2000); // Wait 2 seconds after animation completes
+        }
       }
-      startListening();
-    }
-    
-    // Configure recognition based on mode
-    recognition.continuous = isContinuousMode;
-    recognition.interimResults = true;
-    
-    // Reset any existing progress
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsListening(true);
-    
-    try {
-      // Check if recognition is already running before starting
-      if (recognition.recognizing) {
-        recognition.stop();
-        // Wait a moment before starting again
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        // Restart recognition for these recoverable errors in continuous mode
+        if (isContinuousMode) {
+          setTimeout(() => {
+            if (isContinuousMode) {
+              recognition.start();
+            }
+          }, 100);
+        } else {
+          setIsListening(false);
+        }
+      } else {
+        setIsListening(false);
+        setIsContinuousMode(false);
+      }
+    };
+
+    recognition.onend = () => {
+      console.log('Recognition ended, continuous mode:', isContinuousMode);
+      if (isContinuousMode) {
+        // Restart recognition in continuous mode
         setTimeout(() => {
-          recognition.start();
+          if (isContinuousMode) {
+            recognition.start();
+          }
         }, 100);
       } else {
-        recognition.start();
+        setIsListening(false);
       }
+    };
+
+    try {
+      recognition.start();
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       setIsListening(false);
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionInstance) {
+      recognitionInstance.stop();
+      setRecognitionInstance(null);
+    }
+    setIsListening(false);
+    setIsContinuousMode(false);
+  };
+
+  const handleMicrophoneMouseDown = () => {
+    setWasHoldActivated(false);
+    holdTimerRef.current = setTimeout(() => {
+      setIsContinuousMode(true);
+      setWasHoldActivated(true);
+      startListening();
+      console.log('Continuous listening mode enabled');
+    }, 3000);
+  };
+
+  const handleMicrophoneMouseUp = () => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    if (!wasHoldActivated) {
+      // Quick tap - start single-use listening
+      setIsContinuousMode(false);
+      startListening();
+    }
+
+    setTimeout(() => {
+      setWasHoldActivated(false);
+    }, 100);
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      setIsContinuousMode(false);
+      startListening();
     }
   };
 
@@ -1470,7 +1397,7 @@ function App() {
         
         {/* Microphone Icon */}
         <button
-          onClick={handleMicrophoneClick}
+          onClick={toggleListening}
           onMouseDown={handleMicrophoneMouseDown}
           onMouseUp={handleMicrophoneMouseUp}
           onTouchStart={handleMicrophoneMouseDown}
