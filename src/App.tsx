@@ -76,10 +76,6 @@ const affirmations: Affirmation[] = [
 // ============================================================================
 
 const App: React.FC = () => {
-  // ============================================================================
-  // STATE DECLARATIONS
-  // ============================================================================
-  
   const [currentAffirmation, setCurrentAffirmation] = useState<Affirmation>(affirmations[0]);
   const [clickedLetters, setClickedLetters] = useState<Set<number>>(new Set());
   const [showHearts, setShowHearts] = useState(false);
@@ -93,11 +89,8 @@ const App: React.FC = () => {
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [holdTimer, setHoldTimer] = useState<NodeJS.Timeout | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
-  // ============================================================================
-  // REFS AND SPEECH RECOGNITION SETUP
-  // ============================================================================
-  
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
@@ -150,10 +143,6 @@ const App: React.FC = () => {
     }
   }, [isContinuousMode]);
 
-  // ============================================================================
-  // UTILITY FUNCTIONS
-  // ============================================================================
-
   const getRandomAffirmation = useCallback((): Affirmation => {
     const availableAffirmations = affirmations.filter(a => a.id !== currentAffirmation.id);
     return availableAffirmations[Math.floor(Math.random() * availableAffirmations.length)];
@@ -178,10 +167,6 @@ const App: React.FC = () => {
       default: return 'letter-glow';
     }
   };
-
-  // ============================================================================
-  // SPEECH RECOGNITION FUNCTIONS
-  // ============================================================================
 
   const startListening = () => {
     if (!recognition) {
@@ -277,10 +262,6 @@ const App: React.FC = () => {
     // Long press is handled by the timeout
   };
 
-  // ============================================================================
-  // LETTER INTERACTION FUNCTIONS
-  // ============================================================================
-
   const handleLetterClick = (index: number) => {
     if (currentAffirmation.text[index] === ' ') return;
     
@@ -316,10 +297,6 @@ const App: React.FC = () => {
         return <Heart key={index} className={`${baseClasses} text-pink-500 fill-current`} />;
     }
   };
-
-  // ============================================================================
-  // NAVIGATION FUNCTIONS
-  // ============================================================================
 
   const handleNewAffirmation = () => {
     const newAffirmation = getRandomAffirmation();
@@ -362,10 +339,6 @@ const App: React.FC = () => {
     }
     setAffirmationHistory(newHistory);
   };
-
-  // ============================================================================
-  // BOOKMARK FUNCTIONS
-  // ============================================================================
 
   const loadBookmarks = useCallback(() => {
     const saved = localStorage.getItem('affirmationBookmarks');
@@ -425,10 +398,6 @@ const App: React.FC = () => {
     });
   };
 
-  // ============================================================================
-  // SEARCH FUNCTIONS
-  // ============================================================================
-
   const getFilteredAffirmations = (): Affirmation[] => {
     let filtered = affirmations;
     
@@ -462,10 +431,6 @@ const App: React.FC = () => {
     setAffirmationHistory(newHistory);
   };
 
-  // ============================================================================
-  // SHARING FUNCTIONS
-  // ============================================================================
-
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}?affirmation=${encodeURIComponent(currentAffirmation.id)}`;
     
@@ -477,10 +442,6 @@ const App: React.FC = () => {
       alert('Unable to copy link. Please try again.');
     }
   };
-
-  // ============================================================================
-  // SCROLL AND TOUCH HANDLERS
-  // ============================================================================
 
   const handleWheel = (e: React.WheelEvent) => {
     if (currentView !== 'main') return;
@@ -516,12 +477,6 @@ const App: React.FC = () => {
     setTouchStart(null);
   };
 
-  // ============================================================================
-  // COMPONENT LIFECYCLE
-  // ============================================================================
-
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-
   useEffect(() => {
     loadBookmarks();
     
@@ -536,10 +491,6 @@ const App: React.FC = () => {
       }
     }
   }, [loadBookmarks]);
-
-  // ============================================================================
-  // RENDER FUNCTIONS
-  // ============================================================================
 
   const renderMainView = () => (
     <div 
@@ -786,10 +737,6 @@ const App: React.FC = () => {
       </div>
     </div>
   );
-
-  // ============================================================================
-  // MAIN RENDER
-  // ============================================================================
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
