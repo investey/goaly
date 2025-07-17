@@ -432,6 +432,7 @@ function App() {
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
@@ -660,6 +661,74 @@ function App() {
       setIsContinuousMode(false);
       startListening();
     }
+  };
+
+  const handleMicrophoneClick = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition not supported in this browser');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    let hasProcessed = false;
+
+    recognition.onresult = (event) => {
+      if (hasProcessed) return;
+      hasProcessed = true;
+
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      setIsProcessing(false);
+      recognition.stop();
+
+      // Check for love-related keywords
+      const loveKeywords = ['love', 'heart', 'romance', 'relationship', 'affection', 'beautiful', 'gorgeous', 'attractive'];
+      const wealthKeywords = ['money', 'wealth', 'rich', 'success', 'business', 'financial', 'prosperity', 'abundance'];
+      const healthKeywords = ['health', 'fitness', 'strong', 'energy', 'body', 'exercise', 'healthy', 'vitality'];
+      const learningKeywords = ['learn', 'study', 'knowledge', 'smart', 'intelligent', 'education', 'brain', 'mind'];
+      
+      let foundMatch = false;
+      
+      // Check for category keywords and set appropriate affirmation
+      if (loveKeywords.some(keyword => transcript.includes(keyword))) {
+        const loveAffirmation = loveAffirmations[Math.floor(Math.random() * loveAffirmations.length)];
+        setCurrentAffirmation({ text: loveAffirmation, category: 'love' });
+        foundMatch = true;
+      } else if (wealthKeywords.some(keyword => transcript.includes(keyword))) {
+        const wealthAffirmation = wealthAffirmations[Math.floor(Math.random() * wealthAffirmations.length)];
+        setCurrentAffirmation({ text: wealthAffirmation, category: 'wealth' });
+        foundMatch = true;
+      } else if (healthKeywords.some(keyword => transcript.includes(keyword))) {
+        const healthAffirmation = healthAffirmations[Math.floor(Math.random() * healthAffirmations.length)];
+        setCurrentAffirmation({ text: healthAffirmation, category: 'health' });
+        foundMatch = true;
+      } else if (learningKeywords.some(keyword => transcript.includes(keyword))) {
+        const learningAffirmation = learningAffirmations[Math.floor(Math.random() * learningAffirmations.length)];
+        setCurrentAffirmation({ text: learningAffirmation, category: 'learning' });
+        foundMatch = true;
+      }
+      
+      if (foundMatch) {
+        triggerBurstAnimation();
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsProcessing(false);
+    };
+
+    recognition.onend = () => {
+      setIsProcessing(false);
+    };
+
+    recognition.start();
   };
 
   // Search functionality
