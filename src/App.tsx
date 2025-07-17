@@ -1591,6 +1591,5 @@ function App() {
   );
 }
 
-export default App;
 
 /* Letter sparkle and glow effects for Love (Pink) */
