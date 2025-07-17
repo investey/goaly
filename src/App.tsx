@@ -531,7 +531,7 @@ function App() {
     // Stop any existing recognition first
     if (recognitionInstance) {
       recognitionInstance.stop();
-    }
+    recognition.continuous = true;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -544,12 +544,14 @@ function App() {
 
     recognition.onstart = () => {
       setIsListening(true);
+      setIsProcessing(false);
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
+          setIsProcessing(true);
           transcript += event.results[i][0].transcript;
         }
       }
@@ -568,6 +570,7 @@ function App() {
         if (isContinuousMode) {
           setTimeout(() => {
             generateNewPhrase();
+          recognition.stop();
           }, 2000); // Wait 2 seconds after animation completes
         }
       }
@@ -611,6 +614,7 @@ function App() {
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       setIsListening(false);
+      setIsProcessing(false);
     }
   };
 
@@ -986,6 +990,8 @@ function App() {
     setTouchEnd(null);
     setTouchStart({
       x: e.targetTouches[0].clientX,
+    
+    setIsProcessing(false);
       y: e.targetTouches[0].clientY
     });
   };
