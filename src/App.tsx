@@ -1089,6 +1089,7 @@ function App() {
         setIsResetting(true);
         setShowHearts(false);
         setClickedLetters(new Set());
+        setIsProcessing(false); // Stop microphone flashing when animation starts
         
         // Brief delay before allowing interactions again
         setTimeout(() => {
