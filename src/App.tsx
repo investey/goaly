@@ -175,3 +175,4 @@ const wealthAffirmations = [
   "Money flows to me like magic",
   "I create wealth through service",
   "My business is incredibly profitable"
+]
