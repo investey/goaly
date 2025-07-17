@@ -432,6 +432,7 @@ function App() {
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
@@ -616,7 +617,7 @@ function App() {
 
   const stopListening = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      recognitionRef.current.abort();
       recognitionRef.current = null;
     }
     if (recognitionInstance) {
@@ -1166,6 +1167,15 @@ function App() {
     }
     return hearts;
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
 
   if (currentView === 'search') {
     return (
