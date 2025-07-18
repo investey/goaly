@@ -1,0 +1,32 @@
+# Security Headers for all routes
+/*
+  # Content Security Policy - Prevents XSS attacks
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
+  
+  # Prevent clickjacking attacks
+  X-Frame-Options: DENY
+  
+  # Prevent MIME type sniffing
+  X-Content-Type-Options: nosniff
+  
+  # Enable XSS protection
+  X-XSS-Protection: 1; mode=block
+  
+  # Force HTTPS
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  
+  # Prevent referrer leakage
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # Control permissions
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=(self)
+  
+  # Cache control for security
+  Cache-Control: public, max-age=31536000, immutable
+
+# Special headers for HTML files
+/*.html
+  # Prevent caching of HTML for security updates
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
