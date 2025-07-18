@@ -457,6 +457,22 @@ function App() {
     localStorage.setItem('affirmation-pinned', JSON.stringify(pinnedPhrases));
   }, [pinnedPhrases]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        generateNewPhrase();
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        goToPreviousPhrase();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Fuzzy text matching function
   const isTextMatch = (spoken: string, target: string): boolean => {
     // Remove punctuation and extra spaces
