@@ -18,8 +18,8 @@
   # Prevent referrer leakage
   Referrer-Policy: strict-origin-when-cross-origin
   
-  # Control permissions
-  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=(), vibrate=(), fullscreen=(self)
+  # Control permissions - Allow microphone for speech recognition
+  Permissions-Policy: geolocation=(), microphone=(self), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), fullscreen=(self)
   
   # Cache control for security
   Cache-Control: public, max-age=31536000, immutable
