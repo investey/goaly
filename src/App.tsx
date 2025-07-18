@@ -463,7 +463,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        return;
+        getNewAffirmation();
       }
       
       if (event.key === 'ArrowUp') {
@@ -471,13 +471,13 @@ function App() {
         generateNewPhrase();
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
-        goToPreviousPhrase();
+        goToPreviousAffirmation();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [currentAffirmationIndex, affirmationHistory]);
 
   // Fuzzy text matching function
   const isTextMatch = (spoken: string, target: string): boolean => {
