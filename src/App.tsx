@@ -411,6 +411,7 @@ function App() {
   });
   const [affirmationHistory, setAffirmationHistory] = useState<typeof currentAffirmation[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  const [currentAffirmationIndex, setCurrentAffirmationIndex] = useState(0);
   const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
   const [clickedLetters, setClickedLetters] = useState<Set<number>>(new Set());
