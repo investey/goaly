@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
+import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
 
 const loveAffirmations = [
   "I am worthy of deep love",
@@ -437,29 +438,34 @@ function App() {
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
-    const savedBookmarks = localStorage.getItem('affirmation-bookmarks');
+    const savedBookmarks = secureStorage.getItem('affirmation-bookmarks');
     if (savedBookmarks) {
-      setBookmarkedPhrases(JSON.parse(savedBookmarks));
+      setBookmarkedPhrases(savedBookmarks);
     }
-    const savedPinned = localStorage.getItem('affirmation-pinned');
+    const savedPinned = secureStorage.getItem('affirmation-pinned');
     if (savedPinned) {
-      setPinnedPhrases(JSON.parse(savedPinned));
+      setPinnedPhrases(savedPinned);
     }
   }, []);
 
   // Save bookmarks to localStorage whenever bookmarks change
   useEffect(() => {
-    localStorage.setItem('affirmation-bookmarks', JSON.stringify(bookmarkedPhrases));
+    secureStorage.setItem('affirmation-bookmarks', bookmarkedPhrases);
   }, [bookmarkedPhrases]);
 
   // Save pinned phrases to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('affirmation-pinned', JSON.stringify(pinnedPhrases));
+    secureStorage.setItem('affirmation-pinned', pinnedPhrases);
   }, [pinnedPhrases]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Rate limit keyboard actions
+      if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
+        return;
+      }
+      
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         generateNewPhrase();
@@ -749,19 +755,30 @@ function App() {
 
   // Search functionality
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim() === '') {
+    // Rate limit search actions
+    if (!rateLimiter.isAllowed('search', 30, 60000)) {
+      return;
+    }
+    
+    const sanitizedQuery = sanitizeInput(query);
+    setSearchQuery(sanitizedQuery);
+    if (sanitizedQuery.trim() === '') {
       setSearchResults([]);
       return;
     }
 
     const results = allAffirmations.filter(affirmation =>
-      affirmation.text.toLowerCase().includes(query.toLowerCase())
+      affirmation.text.toLowerCase().includes(sanitizedQuery.toLowerCase())
     );
     setSearchResults(results.map(a => a.text));
   };
 
   const handleTopicSearch = (topic: typeof topics[0]) => {
+    // Rate limit category filter actions
+    if (!rateLimiter.isAllowed('categoryFilter', 20, 60000)) {
+      return;
+    }
+    
     // Filter affirmations by topic keywords
     const categoryAffirmations = allAffirmations.filter(affirmation =>
       topic.keywords.some(keyword =>
@@ -794,6 +811,11 @@ function App() {
   };
 
   const handleSearchResultClick = (phrase: string) => {
+    // Rate limit affirmation selection
+    if (!rateLimiter.isAllowed('selectAffirmation', 30, 60000)) {
+      return;
+    }
+    
     const affirmationObj = allAffirmations.find(a => a.text === phrase);
     if (affirmationObj) {
       setCurrentAffirmation(affirmationObj);
@@ -848,6 +870,11 @@ function App() {
   }, [currentAffirmation]);
 
   const generateNewPhrase = () => {
+    // Rate limit new affirmation requests
+    if (!rateLimiter.isAllowed('newAffirmation', 20, 60000)) {
+      return;
+    }
+    
     if (isResetting) return;
     
     // Add current affirmation to history and maintain max 10 items
@@ -950,6 +977,11 @@ function App() {
   };
 
   const handleBookmark = () => {
+    // Rate limit bookmark actions
+    if (!rateLimiter.isAllowed('bookmark', 30, 60000)) {
+      return;
+    }
+    
     if (bookmarkedPhrases.includes(currentAffirmation.text)) {
       // Remove from bookmarks
       setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
@@ -960,6 +992,11 @@ function App() {
   };
 
   const handleShare = async () => {
+    // Rate limit share actions
+    if (!rateLimiter.isAllowed('share', 10, 60000)) {
+      return;
+    }
+    
     const url = `${window.location.origin}?phrase=${encodeURIComponent(currentAffirmation.text)}`;
     
     try {
@@ -980,12 +1017,22 @@ function App() {
   };
 
   const handleRemoveBookmark = (phraseToRemove: string) => {
+    // Rate limit delete actions
+    if (!rateLimiter.isAllowed('delete', 20, 60000)) {
+      return;
+    }
+    
     setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== phraseToRemove));
     setPinnedPhrases(prev => prev.filter(phrase => phrase !== phraseToRemove));
     setDeleteConfirmation(null);
   };
 
   const handlePinPhrase = (phrase: string, e: React.MouseEvent) => {
+    // Rate limit pin actions
+    if (!rateLimiter.isAllowed('pin', 20, 60000)) {
+      return;
+    }
+    
     e.stopPropagation(); // Prevent triggering the bookmark click
     
     if (pinnedPhrases.includes(phrase)) {
@@ -1004,6 +1051,11 @@ function App() {
   ];
 
   const handleBookmarkClick = (phrase: string) => {
+    // Rate limit affirmation selection
+    if (!rateLimiter.isAllowed('selectAffirmation', 30, 60000)) {
+      return;
+    }
+    
     // Navigate back to main view with the selected phrase
     const affirmationObj = allAffirmations.find(a => a.text === phrase);
     if (affirmationObj) {
@@ -1032,7 +1084,8 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const sharedPhrase = urlParams.get('phrase');
     if (sharedPhrase) {
-      const affirmationObj = allAffirmations.find(a => a.text === decodeURIComponent(sharedPhrase));
+      const sanitizedAffirmation = sanitizeInput(decodeURIComponent(sharedPhrase));
+      const affirmationObj = allAffirmations.find(a => a.text === sanitizedAffirmation);
       if (affirmationObj) {
         setCurrentAffirmation(affirmationObj);
       }
