@@ -1597,52 +1597,54 @@ function App() {
               <X className="w-6 h-6" />
             </button>
             
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Submit Your Goal</h3>
-            <p className="text-gray-600 mb-6">
-              Thank you for your interest in submitting a goal or affirmation to share on the app! 
-              Since we're still getting set up, please submit it via the help desk{' '}
-              <a 
-                href="https://help.example.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline"
-              >
-                here
-              </a>
-              . Thanks!
-            </p>
-            
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Category Filters</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => handleCategoryFilter('love')}
+                onClick={() => filterByCategory('love')}
                 className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
               >
                 #Love
               </button>
               <button
-                onClick={() => handleCategoryFilter('wealth')}
+                onClick={() => filterByCategory('wealth')}
                 className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
               >
                 #Wealth
               </button>
               <button
-                onClick={() => handleCategoryFilter('health')}
+                onClick={() => filterByCategory('health')}
                 className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
               >
                 #Abundance
               </button>
               <button
-                onClick={() => handleCategoryFilter('learning')}
+                onClick={() => filterByCategory('learning')}
                 className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
               >
                 #Learning
               </button>
               <button
-                onClick={() => handleCategoryFilter('natural')}
+                onClick={() => filterByCategory('natural')}
                 className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
               >
                 #Natural
               </button>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-700 text-sm">
+                Thank you for your interest in submitting a goal or affirmation to share on the app! 
+                Since we're still getting set up, please submit it via the help desk{' '}
+                <a 
+                  href="https://help.example.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  here
+                </a>
+                . Thanks!
+              </p>
             </div>
           </div>
         </div>
