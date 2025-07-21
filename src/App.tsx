@@ -1526,16 +1526,12 @@ function App() {
 
       {/* Bookmark and Share Icons - Right Side Edge */}
       <div className="absolute right-4 top-1/2 transform translate-y-20 z-50 flex flex-col gap-3">
-        {/* Bookmark Icon */}
+        {/* Microphone icon */}
         <button
-          onClick={handleBookmark}
-          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+          onClick={handleShare}
+          className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
         >
-          {bookmarkedPhrases.includes(currentAffirmation.text) ? (
-            <BookmarkCheck className="w-6 h-6 text-blue-600" />
-          ) : (
-            <Bookmark className="w-6 h-6 text-gray-700" />
-          )}
+          <Link className="w-6 h-6 text-gray-600" />
         </button>
         
         {/* Microphone Icon */}
@@ -1568,15 +1564,19 @@ function App() {
           </svg>
         </button>
         
-        {/* Share Icon (Link) */}
+        {/* Bookmark icon */}
         <button
-          onClick={handleShare}
+          onClick={handleBookmark}
           className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
         >
-          <Link className="w-6 h-6 text-gray-700" />
+          {isBookmarked ? (
+            <BookmarkCheck className="w-6 h-6 text-blue-500" />
+          ) : (
+            <Bookmark className="w-6 h-6 text-gray-600" />
+          )}
         </button>
       </div>
-
+        {/* Share icon */}
       {/* Copy Alert */}
       {showCopyAlert && (
         <div className="absolute top-20 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
