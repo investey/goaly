@@ -424,8 +424,6 @@ function App() {
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -441,12 +439,6 @@ function App() {
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
-    const savedBookmarks = secureStorage.getItem('bookmarks') || [];
-    setBookmarks(savedBookmarks);
-  }, []);
-
-  // Update isBookmarked when current affirmation or bookmarks change
-  useEffect(() => {
     const savedBookmarks = secureStorage.getItem('affirmation-bookmarks');
     if (savedBookmarks) {
       setBookmarkedPhrases(savedBookmarks);
@@ -456,12 +448,6 @@ function App() {
       setPinnedPhrases(savedPinned);
     }
   }, []);
-
-  // Check if current affirmation is bookmarked
-  useEffect(() => {
-    const bookmarkedIds = bookmarks.map(bookmark => bookmark.id);
-    setIsBookmarked(bookmarkedIds.includes(currentAffirmation.id));
-  }, [currentAffirmation.id, bookmarks]);
 
   // Save bookmarks to localStorage whenever bookmarks change
   useEffect(() => {
