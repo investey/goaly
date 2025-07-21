@@ -1592,26 +1592,32 @@ function App() {
             {/* Close X button */}
             <button
               onClick={() => setShowPlusPopup(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+              className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
             >
-              <X className="w-6 h-6" />
+              #Love
             </button>
             
-            {/* Content */}
+              className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
             <div className="pr-8">
-              <p className="text-gray-800 leading-relaxed">
+              #Wealth
                 Thank you for your interest in submitting a goal or affirmation to share on the app! 
                 Since we're still getting set up, please submit it via the help desk{' '}
                 <a 
-                  href="https://bit.ly/glysupport" 
+              className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
                   target="_blank" 
-                  rel="noopener noreferrer"
+              #Abundance
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   here
-                </a>
+              className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
                 . Thanks!
-              </p>
+              #Learning
+            </button>
+            <button
+              onClick={() => handleCategoryFilter('natural')}
+              className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+            >
+              #Natural
             </div>
           </div>
         </div>
