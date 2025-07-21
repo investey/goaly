@@ -435,7 +435,6 @@ function App() {
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
@@ -459,11 +458,6 @@ function App() {
   useEffect(() => {
     secureStorage.setItem('affirmation-pinned', pinnedPhrases);
   }, [pinnedPhrases]);
-
-  // Update isBookmarked when current affirmation or bookmarks change
-  useEffect(() => {
-    setIsBookmarked(bookmarkedPhrases.includes(currentAffirmation.text));
-  }, [currentAffirmation, bookmarkedPhrases]);
 
   // Keyboard navigation
   useEffect(() => {
