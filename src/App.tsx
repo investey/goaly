@@ -424,6 +424,7 @@ function App() {
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -448,6 +449,12 @@ function App() {
       setPinnedPhrases(savedPinned);
     }
   }, []);
+
+  // Check if current affirmation is bookmarked
+  useEffect(() => {
+    const bookmarkedIds = bookmarks.map(bookmark => bookmark.id);
+    setIsBookmarked(bookmarkedIds.includes(currentAffirmation.id));
+  }, [currentAffirmation.id, bookmarks]);
 
   // Save bookmarks to localStorage whenever bookmarks change
   useEffect(() => {
