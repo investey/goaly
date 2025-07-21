@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
+import { secureStorage } from './utils/security';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
 import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
@@ -425,6 +426,7 @@ function App() {
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -439,6 +441,12 @@ function App() {
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
+  useEffect(() => {
+    const savedBookmarks = secureStorage.getItem('bookmarks') || [];
+    setBookmarks(savedBookmarks);
+  }, []);
+
+  // Update isBookmarked when current affirmation or bookmarks change
   useEffect(() => {
     const savedBookmarks = secureStorage.getItem('affirmation-bookmarks');
     if (savedBookmarks) {
