@@ -1527,26 +1527,6 @@ function App() {
 
       {/* Bookmark and Share Icons - Right Side Edge */}
       <div className="absolute right-4 top-1/2 transform translate-y-20 z-50 flex flex-col gap-3">
-        {/* Share icon */}
-        <button
-          onClick={handleShare}
-          className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-        >
-          <Link className="w-6 h-6 text-gray-600" />
-        </button>
-        
-        {/* Bookmark icon */}
-        <button
-          onClick={handleBookmark}
-          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
-        >
-          {isBookmarked ? (
-            <BookmarkCheck className="w-6 h-6 text-blue-500" />
-          ) : (
-            <Bookmark className="w-6 h-6 text-gray-600" />
-          )}
-        </button>
-
         {/* Microphone Icon */}
         <button
           onClick={toggleListening}
@@ -1575,6 +1555,26 @@ function App() {
               d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" 
             />
           </svg>
+        </button>
+        
+        {/* Bookmark icon */}
+        <button
+          onClick={handleBookmark}
+          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="w-6 h-6 text-blue-500" />
+          ) : (
+            <Bookmark className="w-6 h-6 text-gray-600" />
+          )}
+        </button>
+
+        {/* Share icon */}
+        <button
+          onClick={handleShare}
+          className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+        >
+          <Link className="w-6 h-6 text-gray-600" />
         </button>
       </div>
         
