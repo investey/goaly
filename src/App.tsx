@@ -414,6 +414,7 @@ function App() {
   const [currentAffirmationIndex, setCurrentAffirmationIndex] = useState(0);
   const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [clickedLetters, setClickedLetters] = useState<Set<number>>(new Set());
   const [showHearts, setShowHearts] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
