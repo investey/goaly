@@ -1,17 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  Bookmark, 
-  BookmarkCheck, 
-  Search, 
-  ArrowLeft, 
-  Menu, 
-  Link,
-  Plus,
-  Heart,
-  Star,
-  Thumbtack,
-  X
-} from 'lucide-react';
+import { Bookmark, BookmarkCheck, Search, ArrowLeft, Menu, Link, Plus, Heart, Star, ThumbsUp as Thumbtack, X } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
 import { secureStorage, generateSecureId, rateLimiter } from './utils/security';
