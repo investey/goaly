@@ -1,1531 +1,943 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  Bookmark, 
+  BookmarkCheck, 
+  Search, 
+  ArrowLeft, 
+  Menu, 
+  Link,
+  Plus,
+  Heart,
+  Star,
+  Thumbtack,
+  X
+} from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
-import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
+import { secureStorage, generateSecureId, rateLimiter } from './utils/security';
 
-const loveAffirmations = [
-  "I am worthy of deep love",
-  "Love flows to me effortlessly", 
-  "I attract love with ease",
-  "My heart is open to love",
-  "I radiate love and receive love",
-  "Love surrounds me always",
-  "I deserve unconditional love",
-  "Love is my natural state",
-  "I am a magnet for love",
-  "Love fills every cell of my being",
-  "I give and receive love freely",
-  "My heart overflows with love",
-  "Love is always available to me",
-  "I am love in human form",
-  "Love guides all my actions",
-  "I trust in love's perfect timing",
-  "Love heals and transforms me",
-  "I am surrounded by loving energy",
-  "Love is my greatest strength",
-  "I choose love in every moment",
-  "Love connects me to all beings",
-  "I am deeply loved and cherished",
-  "My capacity for love is infinite",
-  "I attract my perfect soulmate",
-  "Love multiplies when I share it",
-  "I am worthy of passionate love",
-  "My heart chakra is wide open",
-  "I forgive myself with love",
-  "Love is the answer to everything",
-  "I am a beacon of pure love",
-  "My relationships are filled with love",
-  "I speak words of love and kindness",
-  "Love flows through me to others",
-  "I am grateful for all the love in my life",
-  "My soul recognizes its perfect match",
-  "I trust the universe to bring me love",
-  "Love is my default emotion",
-  "I am loveable exactly as I am",
-  "My heart is a fountain of love",
-  "I attract love in all its forms",
-  "Love is my superpower",
-  "I am surrounded by loving souls",
-  "My love story is beautiful and unique",
-  "I deserve a love that celebrates me",
-  "Love comes to me at the perfect time",
-  "I am open to receiving deep love",
-  "My heart beats with pure love",
-  "I create loving relationships effortlessly",
-  "Love is my birthright",
-  "I am worthy of epic love",
-  "My love attracts my ideal partner",
-  "I radiate love wherever I go",
-  "Love finds me wherever I am",
-  "I am a master of self-love",
-  "My heart is healed and whole",
-  "Love transforms everything it touches",
-  "I am divinely guided to love",
-  "My love is a gift to the world",
-  "I choose love over fear always",
-  "Love is my natural frequency",
-  "I am worthy of unconditional acceptance",
-  "My heart is a magnet for true love",
-  "Love flows to me like a river",
-  "I am love walking in human form",
-  "My soul mate is seeking me too",
-  "Love is my greatest adventure",
-  "I trust in love's divine timing",
-  "My heart is open to miracles",
-  "Love is the essence of who I am",
-  "I am worthy of a fairy tale love",
-  "My love creates positive change",
-  "I attract love that honors my worth"
-];
+// Affirmations data organized by category
+const affirmationsData = {
+  love: [
+    "I am worthy of love and respect",
+    "I choose to love myself unconditionally",
+    "I attract healthy and loving relationships",
+    "I am enough just as I am",
+    "I radiate love and positivity",
+    "I deserve happiness and joy",
+    "I am confident in who I am",
+    "I trust in my ability to create meaningful connections",
+    "I am grateful for the love in my life",
+    "I choose to see the beauty in myself and others",
+    "I am open to giving and receiving love",
+    "I honor my feelings and emotions",
+    "I am worthy of kindness and compassion",
+    "I create space for love to flourish in my life",
+    "I am deserving of respect and understanding"
+  ],
+  wealth: [
+    "I am a magnet for financial abundance",
+    "Money flows to me easily and effortlessly",
+    "I am worthy of financial prosperity",
+    "I make smart financial decisions",
+    "I attract opportunities for wealth creation",
+    "I am grateful for my financial blessings",
+    "I have a positive relationship with money",
+    "I am open to receiving wealth from multiple sources",
+    "I invest wisely in my future",
+    "I am financially free and independent",
+    "I create value and am compensated abundantly",
+    "I am confident in my ability to generate income",
+    "I attract prosperity in all areas of my life",
+    "I am worthy of living a life of abundance",
+    "I make decisions that support my financial growth"
+  ],
+  health: [
+    "I am strong, healthy, and full of energy",
+    "I nourish my body with healthy choices",
+    "I am grateful for my body and treat it with respect",
+    "I have the power to heal and transform my health",
+    "I choose foods that fuel my body optimally",
+    "I enjoy moving my body and staying active",
+    "I am committed to my health and well-being",
+    "I listen to my body and give it what it needs",
+    "I am getting stronger and healthier every day",
+    "I prioritize rest and recovery for optimal health",
+    "I am in tune with my body's natural rhythms",
+    "I make choices that support my long-term health",
+    "I am worthy of feeling vibrant and alive",
+    "I trust my body's ability to heal and regenerate",
+    "I create healthy habits that serve my highest good"
+  ],
+  learning: [
+    "I am capable of learning anything I set my mind to",
+    "I embrace challenges as opportunities to grow",
+    "I am curious and open to new experiences",
+    "I learn from every situation and interaction",
+    "I am constantly expanding my knowledge and skills",
+    "I trust in my ability to understand and master new concepts",
+    "I am patient with myself as I learn and grow",
+    "I celebrate my progress and achievements",
+    "I am committed to lifelong learning and development",
+    "I approach learning with enthusiasm and joy",
+    "I am confident in my ability to solve problems",
+    "I learn from my mistakes and use them to improve",
+    "I am open to feedback and constructive criticism",
+    "I invest in my education and personal development",
+    "I am becoming the best version of myself every day"
+  ]
+};
 
-const wealthAffirmations = [
-  "I am a money magnet",
-  "Wealth flows to me easily",
-  "I attract abundance effortlessly",
-  "Money comes to me from multiple sources",
-  "I am worthy of financial success",
-  "Prosperity is my natural state",
-  "I create wealth through value",
-  "My income increases daily",
-  "I am financially free",
-  "Money works for me",
-  "I attract lucrative opportunities",
-  "Wealth is drawn to me",
-  "I am a successful entrepreneur",
-  "My business thrives and grows",
-  "I make smart financial decisions",
-  "Abundance surrounds me always",
-  "I deserve unlimited prosperity",
-  "Money flows like water to me",
-  "I am rich in all areas",
-  "Financial success is inevitable",
-  "I attract profitable ventures",
-  "My wealth multiplies exponentially",
-  "I am open to receiving money",
-  "Success follows me everywhere",
-  "I create multiple income streams",
-  "My business generates massive profits",
-  "I am a wealth creator",
-  "Money loves me and I love money",
-  "I attract high-paying clients",
-  "My net worth increases constantly",
-  "I am financially abundant",
-  "Prosperity flows through me",
-  "I manifest money with ease",
-  "My business scales effortlessly",
-  "I attract investment opportunities",
-  "Wealth is my birthright",
-  "I am a money-making machine",
-  "Financial freedom is mine",
-  "I attract passive income streams",
-  "My business empire grows daily",
-  "I am worthy of massive wealth",
-  "Money comes to me in unexpected ways",
-  "I create value and receive abundance",
-  "My financial goals manifest quickly",
-  "I am a master of money",
-  "Wealth creation is my superpower",
-  "I attract millionaire opportunities",
-  "My business dominates the market",
-  "I am financially unstoppable",
-  "Money flows to me like a river",
-  "I am a magnet for financial miracles",
-  "Wealth consciousness is my default state",
-  "I attract money while I sleep",
-  "My bank account grows exponentially",
-  "I am worthy of unlimited abundance",
-  "Money comes to me from everywhere",
-  "I create wealth with my thoughts",
-  "My business is a cash cow",
-  "I attract wealthy mentors and partners",
-  "Financial abundance is my reality",
-  "I am a master wealth builder",
-  "Money flows to me effortlessly",
-  "I deserve to be financially free",
-  "My income exceeds my expenses",
-  "I attract profitable investments",
-  "Wealth is attracted to my energy",
-  "I am financially independent",
-  "Money multiplies in my hands",
-  "I create value that generates wealth",
-  "My business attracts ideal customers",
-  "I am a successful money manager",
-  "Abundance is my natural state",
-  "I attract money-making opportunities",
-  "My wealth serves the highest good",
-  "I am worthy of financial security",
-  "Money comes to me in perfect timing",
-  "I create multiple revenue streams",
-  "My business generates passive income",
-  "I attract financial windfalls",
-  "Wealth flows to me consistently",
-  "I am a money manifestation master",
-  "My financial future is bright",
-  "I attract abundance in all forms",
-  "Money is my faithful servant",
-  "I create wealth through innovation",
-  "My business scales automatically",
-  "I attract high-value opportunities",
-  "Financial success is my destiny",
-  "I am worthy of extreme wealth",
-  "Money loves to work for me",
-  "I attract profitable partnerships",
-  "My wealth creates positive impact",
-  "I am financially bulletproof",
-  "Money flows to me like magic",
-  "I create wealth through service",
-  "My business is incredibly profitable",
-  "I attract money with gratitude",
-  "Wealth is my divine inheritance",
-  "I am a millionaire in the making",
-  "Money comes to me in avalanches"
-];
+// Get all affirmations in a single array
+const getAllAffirmations = () => {
+  return [
+    ...affirmationsData.love.map(text => ({ text, category: 'love' })),
+    ...affirmationsData.wealth.map(text => ({ text, category: 'wealth' })),
+    ...affirmationsData.health.map(text => ({ text, category: 'health' })),
+    ...affirmationsData.learning.map(text => ({ text, category: 'learning' }))
+  ];
+};
 
-const healthAffirmations = [
-  "I am perfectly healthy and strong",
-  "My body heals itself naturally",
-  "I radiate vibrant health",
-  "Every cell in my body is healthy",
-  "I am full of energy and vitality",
-  "My body is my temple",
-  "I choose healthy foods that nourish me",
-  "I love exercising and moving my body",
-  "My immune system is powerful",
-  "I sleep deeply and wake refreshed",
-  "My body functions perfectly",
-  "I am strong and resilient",
-  "Health flows through every part of me",
-  "I am in perfect physical condition",
-  "My body recovers quickly",
-  "I have unlimited energy",
-  "My mind and body are in harmony",
-  "I am grateful for my healthy body",
-  "I attract perfect health",
-  "My body is a healing machine",
-  "I feel amazing in my body",
-  "I am physically fit and strong",
-  "My body deserves love and care",
-  "I make healthy choices effortlessly",
-  "My metabolism works perfectly",
-  "I am at my ideal weight",
-  "My body is flexible and strong",
-  "I breathe deeply and easily",
-  "My heart beats with perfect rhythm",
-  "I am mentally and physically balanced",
-  "My body regenerates itself daily",
-  "I am free from pain and illness",
-  "My body moves with grace and ease",
-  "I have perfect posture and alignment",
-  "My digestive system works flawlessly",
-  "I am aging gracefully and healthily",
-  "My body is a source of joy",
-  "I am committed to my health",
-  "My body responds to exercise beautifully",
-  "I have incredible stamina and endurance",
-  "My body is strong and capable",
-  "I trust my body's wisdom",
-  "My health improves every day",
-  "I am the picture of perfect health",
-  "My body is my greatest asset",
-  "I feel fantastic in my skin",
-  "My body is a masterpiece",
-  "I am healthy inside and out",
-  "My body serves me perfectly",
-  "I am a beacon of health and vitality",
-  "My body is a temple of wellness",
-  "I attract perfect health naturally",
-  "My cells regenerate with perfection",
-  "I am vibrant and alive",
-  "My body heals faster than expected",
-  "I radiate health and happiness",
-  "My immune system is invincible",
-  "I choose foods that energize me",
-  "My body loves to move and exercise",
-  "I sleep like a baby every night",
-  "My energy levels are consistently high",
-  "I am mentally sharp and focused",
-  "My body is perfectly balanced",
-  "I recover quickly from any challenge",
-  "My strength increases daily",
-  "I am in tune with my body's needs",
-  "My health is my top priority",
-  "I feel younger every day",
-  "My body is incredibly resilient",
-  "I am free from stress and tension",
-  "My organs function optimally",
-  "I have perfect circulation",
-  "My bones are strong and healthy",
-  "I breathe with ease and comfort",
-  "My skin glows with health",
-  "I am at my perfect weight",
-  "My body moves like a dancer",
-  "I have excellent coordination",
-  "My reflexes are lightning fast",
-  "I am physically powerful",
-  "My body is a healing miracle",
-  "I attract wellness in all forms",
-  "My health radiates from within",
-  "I am genetically blessed",
-  "My body loves healthy habits",
-  "I am disease-free and thriving",
-  "My energy is magnetic",
-  "I am physically unstoppable",
-  "My body is perfectly designed",
-  "I heal at the speed of light",
-  "My health is my superpower",
-  "I am a picture of perfect fitness",
-  "My body is my best friend",
-  "I am healthy in every way",
-  "My vitality is contagious",
-  "I am built for optimal health",
-  "My body is a wellness machine",
-  "I am healthy beyond measure",
-  "My body thrives on life"
-];
+interface BookmarkedAffirmation {
+  id: string;
+  text: string;
+  category: string;
+  isPinned: boolean;
+  timestamp: number;
+}
 
-const learningAffirmations = [
-  "I am a fast and eager learner",
-  "Knowledge comes easily to me",
-  "I absorb information effortlessly",
-  "My mind is sharp and focused",
-  "I love learning new things",
-  "I retain information perfectly",
-  "My brain is a powerful learning machine",
-  "I understand concepts quickly",
-  "Learning brings me joy and excitement",
-  "I am curious about everything",
-  "My memory is excellent and reliable",
-  "I master new skills with ease",
-  "Knowledge flows to me naturally",
-  "I am intelligent and capable",
-  "My mind expands with every lesson",
-  "I embrace challenges as learning opportunities",
-  "I am a lifelong learner",
-  "My concentration is laser-focused",
-  "I learn from every experience",
-  "My brain creates new connections daily",
-  "I am open to new ideas and perspectives",
-  "Learning is my superpower",
-  "I process information efficiently",
-  "My mind is like a sponge for knowledge",
-  "I enjoy studying and researching",
-  "I am a master student",
-  "My learning capacity is unlimited",
-  "I connect ideas and concepts easily",
-  "Knowledge transforms my life",
-  "I am wise beyond my years",
-  "My mind is clear and organized",
-  "I learn something valuable every day",
-  "I am a knowledge seeker",
-  "My brain power increases constantly",
-  "I understand complex topics easily",
-  "Learning accelerates my growth",
-  "I am mentally agile and quick",
-  "My mind is a treasure trove of knowledge",
-  "I apply what I learn immediately",
-  "I am a brilliant problem solver",
-  "Knowledge is my greatest wealth",
-  "I learn from the best teachers",
-  "My mind is always growing",
-  "I am a student of life",
-  "Learning comes naturally to me",
-  "I have an insatiable thirst for knowledge",
-  "My brain is optimized for learning",
-  "I master any subject I choose",
-  "Knowledge empowers me completely",
-  "I am a learning machine",
-  "My mind is a knowledge magnet",
-  "I absorb wisdom like a sponge",
-  "Learning is my greatest passion",
-  "My brain processes information perfectly",
-  "I am intellectually unstoppable",
-  "Knowledge flows through me effortlessly",
-  "I am a genius in my own right",
-  "My mind is infinitely expandable",
-  "I learn faster than ever before",
-  "Wisdom comes to me naturally",
-  "I am a master of my mind",
-  "My intelligence grows daily",
-  "I understand everything I study",
-  "Learning is effortless for me",
-  "My mind is crystal clear",
-  "I am a brilliant thinker",
-  "Knowledge is my natural state",
-  "I learn with incredible speed",
-  "My brain is a supercomputer",
-  "I am mentally invincible",
-  "Learning transforms my reality",
-  "I am a knowledge creator",
-  "My mind is perfectly organized",
-  "I learn through all my senses",
-  "Wisdom flows to me constantly",
-  "I am intellectually gifted",
-  "My learning never stops",
-  "I am a master of information",
-  "Knowledge is my greatest tool",
-  "I learn from every moment",
-  "My mind is a learning laboratory",
-  "I am cognitively superior",
-  "Learning is my life force",
-  "I am a wisdom gatherer",
-  "My brain is incredibly powerful",
-  "I learn with perfect recall",
-  "Knowledge is my superpower",
-  "I am mentally magnificent",
-  "My mind is a learning miracle",
-  "I absorb knowledge instantly",
-  "Learning is my greatest joy",
-  "I am intellectually brilliant",
-  "My mind is a knowledge vault",
-  "I learn with laser precision",
-  "Wisdom is my natural gift",
-  "I am a learning phenomenon",
-  "My brain is optimized for genius",
-  "Knowledge flows through my DNA",
-  "I am a master of understanding"
-];
+interface LetterState {
+  isClicked: boolean;
+  isAnimating: boolean;
+}
 
-// Combine all affirmations with category labels
-const allAffirmations = [
-  ...loveAffirmations.map(text => ({ text, category: 'love' })),
-  ...wealthAffirmations.map(text => ({ text, category: 'wealth' })),
-  ...healthAffirmations.map(text => ({ text, category: 'health' })),
-  ...learningAffirmations.map(text => ({ text, category: 'learning' }))
-];
+interface BurstParticle {
+  id: string;
+  x: number;
+  y: number;
+  endX: number;
+  endY: number;
+  delay: number;
+  category: string;
+}
 
-const topics = [
-  { name: "Love & Self-Love", keywords: ["worthy", "love", "deserve", "radiate", "magnet", "overflows", "heart", "connects"] },
-  { name: "Wealth & Business", keywords: ["money", "wealth", "business", "financial", "prosperity", "abundance", "income", "profit"] },
-  { name: "Health & Fitness", keywords: ["healthy", "body", "energy", "strong", "vitality", "exercise", "heal", "immune"] },
-  { name: "Learning & Growth", keywords: ["learn", "knowledge", "mind", "brain", "study", "understand", "master", "intelligent"] },
-  { name: "Abundance", keywords: ["flows", "effortlessly", "surrounds", "available", "fills"] },
-  { name: "Natural State", keywords: ["natural", "state", "form", "cell", "being"] }
-];
+// Speech Recognition types
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
 
-function App() {
-  const [currentView, setCurrentView] = useState<'main' | 'bookmarks' | 'search'>('main');
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: Event) => any) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
+const App: React.FC = () => {
   const [currentAffirmation, setCurrentAffirmation] = useState(() => {
-    const randomAffirmation = allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
-    return randomAffirmation;
+    const allAffirmations = getAllAffirmations();
+    return allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
   });
-  const [affirmationHistory, setAffirmationHistory] = useState<typeof currentAffirmation[]>([]);
-  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
-  const [currentAffirmationIndex, setCurrentAffirmationIndex] = useState(0);
-  const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
-  const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [clickedLetters, setClickedLetters] = useState<Set<number>>(new Set());
-  const [showHearts, setShowHearts] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isTouching, setIsTouching] = useState(false);
-  const [dynamicFontSize, setDynamicFontSize] = useState('text-[16vw] sm:text-[14vw] md:text-[12vw] lg:text-[10vw] xl:text-[8vw] 2xl:text-[7vw]');
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null);
+  
+  const [letterStates, setLetterStates] = useState<LetterState[]>([]);
+  const [burstParticles, setBurstParticles] = useState<BurstParticle[]>([]);
+  const [showBurst, setShowBurst] = useState(false);
+  const [bookmarks, setBookmarks] = useState<BookmarkedAffirmation[]>([]);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
-  const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categoryAffirmations, setCategoryAffirmations] = useState<typeof allAffirmations>([]);
-  const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
-  const [showPlusPopup, setShowPlusPopup] = useState(false);
+  const [searchResults, setSearchResults] = useState<Array<{text: string, category: string}>>([]);
+  const [showCopyAlert, setShowCopyAlert] = useState(false);
+  const [affirmationHistory, setAffirmationHistory] = useState<Array<{text: string, category: string}>>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
-  const [wasHoldActivated, setWasHoldActivated] = useState(false);
-  const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [microphoneHoldTimer, setMicrophoneHoldTimer] = useState<NodeJS.Timeout | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Initialize letter states when affirmation changes
+  useEffect(() => {
+    const letters = currentAffirmation.text.split('').filter(char => char !== ' ');
+    setLetterStates(letters.map(() => ({ isClicked: false, isAnimating: false })));
+    setBurstParticles([]);
+    setShowBurst(false);
+  }, [currentAffirmation]);
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
-    const savedBookmarks = secureStorage.getItem('affirmation-bookmarks');
-    if (savedBookmarks) {
-      setBookmarkedPhrases(savedBookmarks);
-    }
-    const savedPinned = secureStorage.getItem('affirmation-pinned');
-    if (savedPinned) {
-      setPinnedPhrases(savedPinned);
+    const savedBookmarks = secureStorage.getItem('goaly-bookmarks');
+    if (savedBookmarks && Array.isArray(savedBookmarks)) {
+      setBookmarks(savedBookmarks);
     }
   }, []);
 
   // Save bookmarks to localStorage whenever bookmarks change
   useEffect(() => {
-    secureStorage.setItem('affirmation-bookmarks', bookmarkedPhrases);
-  }, [bookmarkedPhrases]);
+    secureStorage.setItem('goaly-bookmarks', bookmarks);
+  }, [bookmarks]);
 
-  // Save pinned phrases to localStorage whenever they change
+  // Initialize speech recognition
   useEffect(() => {
-    secureStorage.setItem('affirmation-pinned', pinnedPhrases);
-  }, [pinnedPhrases]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Rate limit keyboard actions
-      if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        getNewAffirmation();
-      }
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
       
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        generateNewPhrase();
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        goToPreviousAffirmation();
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+          if (isContinuousMode) {
+            // Restart recognition in continuous mode
+            setTimeout(() => {
+              if (recognitionRef.current && isContinuousMode) {
+                try {
+                  recognitionRef.current.start();
+                } catch (error) {
+                  console.log('Recognition restart failed:', error);
+                }
+              }
+            }, 100);
+          }
+        };
+
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          let finalTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            }
+          }
+
+          if (finalTranscript.trim()) {
+            handleVoiceCommand(finalTranscript.trim().toLowerCase());
+          }
+        };
+
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error:', event);
+          setIsListening(false);
+        };
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
       }
     };
+  }, [isContinuousMode]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentAffirmationIndex, affirmationHistory]);
-
-  // Fuzzy text matching function
-  const isTextMatch = (spoken: string, target: string): boolean => {
-    // Remove punctuation and extra spaces
-    const cleanSpoken = spoken.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
-    const cleanTarget = target.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
-    
-    // Exact match
-    if (cleanSpoken === cleanTarget) return true;
-    
-    // Word-by-word matching (allows for small differences)
-    const spokenWords = cleanSpoken.split(' ');
-    const targetWords = cleanTarget.split(' ');
-    
-    if (spokenWords.length !== targetWords.length) return false;
-    
-    let matchCount = 0;
-    for (let i = 0; i < targetWords.length; i++) {
-      const spokenWord = spokenWords[i];
-      const targetWord = targetWords[i];
-      
-      // Exact word match
-      if (spokenWord === targetWord) {
-        matchCount++;
-      }
-      // Similar word match (handles pronunciation variations)
-      else if (isWordSimilar(spokenWord, targetWord)) {
-        matchCount++;
-      }
-    }
-    
-    // Require at least 80% word match
-    return matchCount / targetWords.length >= 0.8;
-  };
-
-  // Check if two words are similar (handles common speech recognition errors)
-  const isWordSimilar = (word1: string, word2: string): boolean => {
-    // Simple similarity check - you could enhance this with more sophisticated algorithms
-    if (Math.abs(word1.length - word2.length) > 2) return false;
-    
-    let differences = 0;
-    const maxLength = Math.max(word1.length, word2.length);
-    
-    for (let i = 0; i < maxLength; i++) {
-      if (word1[i] !== word2[i]) {
-        differences++;
-      }
-    }
-    
-    return differences <= 2; // Allow up to 2 character differences
-  };
-
-  const fillAllLettersGradually = () => {
-    const letters = currentAffirmation.text.split('');
-    const nonSpaceIndices = letters
-      .map((char, index) => ({ char, index }))
-      .filter(({ char }) => char !== ' ')
-      .map(({ index }) => index);
-    
-    // Fill letters gradually with animation
-    nonSpaceIndices.forEach((index, i) => {
-      setTimeout(() => {
-        setClickedLetters(prev => new Set([...prev, index]));
-      }, i * 50); // 50ms delay between each letter
-    });
-  };
-
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in this browser');
+  const handleVoiceCommand = (command: string) => {
+    if (!rateLimiter.isAllowed('voice-command', 20, 60000)) {
+      console.warn('Voice command rate limit exceeded');
       return;
     }
 
-    // Stop any existing recognition first
-    if (recognitionInstance) {
-      recognitionInstance.stop();
+    // Commands for navigation
+    if (command.includes('next') || command.includes('new affirmation')) {
+      getNewAffirmation();
+    } else if (command.includes('bookmark') || command.includes('save')) {
+      handleBookmark();
+    } else if (command.includes('share')) {
+      handleShare();
+    } else if (command.includes('search')) {
+      setShowSearch(true);
+    } else if (command.includes('bookmarks') || command.includes('saved')) {
+      setShowBookmarks(true);
+    } else if (command.includes('back') || command.includes('home')) {
+      setShowBookmarks(false);
+      setShowSearch(false);
     }
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    setRecognitionInstance(recognition);
     
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          transcript += event.results[i][0].transcript;
-        }
-      }
-      
-      // Stop flashing after processing the sentence
-      setIsProcessing(false);
-      
-      transcript = transcript.toLowerCase().trim();
-      if (!transcript) return;
-      
-      console.log('Speech recognized:', transcript);
-      
-      // Check if the transcript matches the current affirmation
-      if (isTextMatch(transcript, currentAffirmation.text)) {
-        console.log('Match found! Filling letters...');
-        fillAllLettersGradually();
-        
-        // In continuous mode, get new affirmation after successful match
-        if (isContinuousMode) {
-          setTimeout(() => {
-            generateNewPhrase();
-          }, 2000); // Wait 2 seconds after animation completes
-        }
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Restart recognition for these recoverable errors in continuous mode
-        if (isContinuousMode) {
-          setTimeout(() => {
-            if (isContinuousMode) {
-              recognition.start();
-            }
-          }, 100);
-        } else {
-          setIsListening(false);
-        }
-      } else {
-        setIsListening(false);
-        setIsContinuousMode(false);
-      }
-    };
-
-    recognition.onend = () => {
-      console.log('Recognition ended, continuous mode:', isContinuousMode);
-      if (isContinuousMode) {
-        // Restart recognition in continuous mode
-        setTimeout(() => {
-          if (isContinuousMode) {
-            recognition.start();
-          }
-        }, 100);
-      } else {
-        setIsListening(false);
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch (error) {
-      console.error('Error starting speech recognition:', error);
-      setIsListening(false);
+    // Category-specific commands
+    else if (command.includes('love')) {
+      const loveAffirmations = affirmationsData.love.map(text => ({ text, category: 'love' }));
+      const randomLove = loveAffirmations[Math.floor(Math.random() * loveAffirmations.length)];
+      setCurrentAffirmation(randomLove);
+      addToHistory(randomLove);
+    } else if (command.includes('wealth') || command.includes('money')) {
+      const wealthAffirmations = affirmationsData.wealth.map(text => ({ text, category: 'wealth' }));
+      const randomWealth = wealthAffirmations[Math.floor(Math.random() * wealthAffirmations.length)];
+      setCurrentAffirmation(randomWealth);
+      addToHistory(randomWealth);
+    } else if (command.includes('health') || command.includes('fitness')) {
+      const healthAffirmations = affirmationsData.health.map(text => ({ text, category: 'health' }));
+      const randomHealth = healthAffirmations[Math.floor(Math.random() * healthAffirmations.length)];
+      setCurrentAffirmation(randomHealth);
+      addToHistory(randomHealth);
+    } else if (command.includes('learning') || command.includes('growth')) {
+      const learningAffirmations = affirmationsData.learning.map(text => ({ text, category: 'learning' }));
+      const randomLearning = learningAffirmations[Math.floor(Math.random() * learningAffirmations.length)];
+      setCurrentAffirmation(randomLearning);
+      addToHistory(randomLearning);
     }
-  };
-
-  const stopListening = () => {
-    if (recognitionInstance) {
-      recognitionInstance.stop();
-      setRecognitionInstance(null);
-    }
-    setIsListening(false);
-    setIsContinuousMode(false);
-  };
-
-  const handleMicrophoneMouseDown = () => {
-    setWasHoldActivated(false);
-    holdTimerRef.current = setTimeout(() => {
-      setIsContinuousMode(true);
-      setWasHoldActivated(true);
-      startListening();
-      console.log('Continuous listening mode enabled');
-    }, 3000);
-  };
-
-  const handleMicrophoneMouseUp = () => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-
-    if (!wasHoldActivated) {
-      // Quick tap - start single-use listening
-      setIsContinuousMode(false);
-      startListening();
-    }
-
-    setTimeout(() => {
-      setWasHoldActivated(false);
-    }, 100);
   };
 
   const toggleListening = () => {
+    if (!recognitionRef.current) return;
+
     if (isListening) {
-      stopListening();
-    } else {
+      recognitionRef.current.stop();
       setIsContinuousMode(false);
-      startListening();
-    }
-  };
-
-  const handleMicrophoneClick = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition not supported in this browser');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    let hasProcessed = false;
-
-    recognition.onresult = (event) => {
-      if (hasProcessed) return;
-      hasProcessed = true;
-
-      const transcript = event.results[0][0].transcript.toLowerCase().trim();
-      setIsProcessing(false);
-      recognition.stop();
-
-      // Check for love-related keywords
-      const loveKeywords = ['love', 'heart', 'romance', 'relationship', 'affection', 'beautiful', 'gorgeous', 'attractive'];
-      const wealthKeywords = ['money', 'wealth', 'rich', 'success', 'business', 'financial', 'prosperity', 'abundance'];
-      const healthKeywords = ['health', 'fitness', 'strong', 'energy', 'body', 'exercise', 'healthy', 'vitality'];
-      const learningKeywords = ['learn', 'study', 'knowledge', 'smart', 'intelligent', 'education', 'brain', 'mind'];
-      
-      let foundMatch = false;
-      
-      // Check for category keywords and set appropriate affirmation
-      if (loveKeywords.some(keyword => transcript.includes(keyword))) {
-        const loveAffirmation = loveAffirmations[Math.floor(Math.random() * loveAffirmations.length)];
-        setCurrentAffirmation({ text: loveAffirmation, category: 'love' });
-        foundMatch = true;
-      } else if (wealthKeywords.some(keyword => transcript.includes(keyword))) {
-        const wealthAffirmation = wealthAffirmations[Math.floor(Math.random() * wealthAffirmations.length)];
-        setCurrentAffirmation({ text: wealthAffirmation, category: 'wealth' });
-        foundMatch = true;
-      } else if (healthKeywords.some(keyword => transcript.includes(keyword))) {
-        const healthAffirmation = healthAffirmations[Math.floor(Math.random() * healthAffirmations.length)];
-        setCurrentAffirmation({ text: healthAffirmation, category: 'health' });
-        foundMatch = true;
-      } else if (learningKeywords.some(keyword => transcript.includes(keyword))) {
-        const learningAffirmation = learningAffirmations[Math.floor(Math.random() * learningAffirmations.length)];
-        setCurrentAffirmation({ text: learningAffirmation, category: 'learning' });
-        foundMatch = true;
+    } else {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
       }
-      
-      if (foundMatch) {
-        triggerBurstAnimation();
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsProcessing(false);
-    };
-
-    recognition.onend = () => {
-      setIsProcessing(false);
-    };
-
-    recognition.start();
+    }
   };
 
-  // Search functionality
-  const handleSearch = (query: string) => {
-    // Rate limit search actions
-    if (!rateLimiter.isAllowed('search', 30, 60000)) {
-      return;
-    }
-    
-    const sanitizedQuery = sanitizeInput(query);
-    setSearchQuery(sanitizedQuery);
-    if (sanitizedQuery.trim() === '') {
-      setSearchResults([]);
-      return;
-    }
-
-    const results = allAffirmations.filter(affirmation =>
-      affirmation.text.toLowerCase().includes(sanitizedQuery.toLowerCase())
-    );
-    setSearchResults(results.map(a => a.text));
-  };
-
-  const handleTopicSearch = (topic: typeof topics[0]) => {
-    // Rate limit category filter actions
-    if (!rateLimiter.isAllowed('categoryFilter', 20, 60000)) {
-      return;
-    }
-    
-    // Filter affirmations by topic keywords
-    const categoryAffirmations = allAffirmations.filter(affirmation =>
-      topic.keywords.some(keyword =>
-        affirmation.text.toLowerCase().includes(keyword.toLowerCase())
-      )
-    );
-    
-    // Select a random affirmation from the category
-    if (categoryAffirmations.length > 0) {
-      // Set up category browsing state
-      setSelectedCategory(topic.name);
-      setCategoryAffirmations(categoryAffirmations);
-      setUsedCategoryAffirmations(new Set());
-      
-      const randomAffirmation = categoryAffirmations[Math.floor(Math.random() * categoryAffirmations.length)];
-      setCurrentAffirmation(randomAffirmation);
-      setUsedCategoryAffirmations(new Set([randomAffirmation.text]));
-    }
-    
-    // Return to main feed
-    setCurrentView('main');
-    setSearchQuery('');
-    setSearchResults([]);
-    // Reset history and interactions for clean state
-    setAffirmationHistory([]);
-    setCurrentHistoryIndex(-1);
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsResetting(false);
-  };
-
-  const handleSearchResultClick = (phrase: string) => {
-    // Rate limit affirmation selection
-    if (!rateLimiter.isAllowed('selectAffirmation', 30, 60000)) {
-      return;
-    }
-    
-    const affirmationObj = allAffirmations.find(a => a.text === phrase);
-    if (affirmationObj) {
-      setCurrentAffirmation(affirmationObj);
-    }
-    setCurrentView('main');
-    setSearchQuery('');
-    setSearchResults([]);
-    // Reset history and interactions for clean state
-    setAffirmationHistory([]);
-    setCurrentHistoryIndex(-1);
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsResetting(false);
-    // Reset category browsing
-    setSelectedCategory(null);
-    setCategoryAffirmations([]);
-    setUsedCategoryAffirmations(new Set());
-  };
-
-  const returnToMainFeed = () => {
-    // Generate a new random affirmation
-    const newAffirmation = allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
-    setCurrentAffirmation(newAffirmation);
-    setCurrentView('main');
-    // Reset all state for fresh start
-    setAffirmationHistory([]);
-    setCurrentHistoryIndex(-1);
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsResetting(false);
-    setSearchQuery('');
-    setSearchResults([]);
-    // Reset category browsing
-    setSelectedCategory(null);
-    setCategoryAffirmations([]);
-    setUsedCategoryAffirmations(new Set());
-  };
-
-  // Split affirmation into individual characters (including spaces)
-  const letters = currentAffirmation.text.split('');
-  const totalLetters = letters.filter(char => char !== ' ').length;
-
-  // Calculate optimal font size based on content
-  const calculateOptimalFontSize = (text: string) => {
-    // Use consistent, larger font sizes for all phrases
-    return 'text-[14vw] sm:text-[12vw] md:text-[10vw] lg:text-[8vw] xl:text-[6vw] 2xl:text-[5vw]';
-  };
-
-  // Update font size when affirmation changes
-  useEffect(() => {
-    setDynamicFontSize(calculateOptimalFontSize(currentAffirmation.text));
-  }, [currentAffirmation]);
-
-  const generateNewPhrase = () => {
-    // Rate limit new affirmation requests
-    if (!rateLimiter.isAllowed('newAffirmation', 20, 60000)) {
-      return;
-    }
-    
-    if (isResetting) return;
-    
-    // Add current affirmation to history and maintain max 10 items
-    setAffirmationHistory(prev => {
-      const newHistory = [...prev];
-      if (currentHistoryIndex === -1 || newHistory[currentHistoryIndex]?.text !== currentAffirmation.text) {
-        newHistory.push(currentAffirmation);
-        // Keep only last 10 items
-        if (newHistory.length > 10) {
-          newHistory.shift();
+  const handleMicrophoneMouseDown = () => {
+    const timer = setTimeout(() => {
+      setIsContinuousMode(true);
+      if (recognitionRef.current && !isListening) {
+        try {
+          recognitionRef.current.start();
+        } catch (error) {
+          console.error('Failed to start continuous recognition:', error);
         }
       }
+    }, 1000); // 1 second hold to activate continuous mode
+    
+    setMicrophoneHoldTimer(timer);
+  };
+
+  const handleMicrophoneMouseUp = () => {
+    if (microphoneHoldTimer) {
+      clearTimeout(microphoneHoldTimer);
+      setMicrophoneHoldTimer(null);
+    }
+    
+    if (!isContinuousMode) {
+      toggleListening();
+    }
+  };
+
+  const addToHistory = (affirmation: {text: string, category: string}) => {
+    setAffirmationHistory(prev => {
+      const newHistory = [affirmation, ...prev.slice(0, 9)]; // Keep last 10
       return newHistory;
     });
-    
-    setCurrentHistoryIndex(prev => {
-      const newIndex = prev === -1 ? 0 : Math.min(prev + 1, 9);
-      return newIndex;
-    });
-    
-    let newAffirmation;
-    
-    // If we're in category browsing mode
-    if (selectedCategory && categoryAffirmations.length > 0) {
-      // Get unused affirmations from the current category
-      const unusedCategoryAffirmations = categoryAffirmations.filter(
-        affirmation => !usedCategoryAffirmations.has(affirmation.text)
-      );
-      
-      if (unusedCategoryAffirmations.length > 0) {
-        // Select from unused category affirmations
-        newAffirmation = unusedCategoryAffirmations[Math.floor(Math.random() * unusedCategoryAffirmations.length)];
-        setUsedCategoryAffirmations(prev => new Set([...prev, newAffirmation.text]));
-      } else {
-        // All category affirmations used, switch to random mode
-        setSelectedCategory(null);
-        setCategoryAffirmations([]);
-        setUsedCategoryAffirmations(new Set());
-        
-        // Generate random affirmation from all categories
-        do {
-          newAffirmation = allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
-        } while (newAffirmation.text === currentAffirmation.text);
-      }
-    } else {
-      // Normal random mode
-      do {
-        newAffirmation = allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
-      } while (newAffirmation.text === currentAffirmation.text);
-    }
-    
-    setIsResetting(true);
-    setShowHearts(false);
-    setClickedLetters(new Set());
-    
-    setTimeout(() => {
-      setCurrentAffirmation(newAffirmation);
-      setIsResetting(false);
-    }, 300);
+    setHistoryIndex(-1);
   };
 
-  const goToNextPhrase = () => {
-    if (isResetting) return;
-    
-    // If we're not at the end of history, go forward
-    if (currentHistoryIndex < affirmationHistory.length - 1) {
-      const nextIndex = currentHistoryIndex + 1;
-      const nextAffirmation = affirmationHistory[nextIndex];
-      
-      setIsResetting(true);
-      setShowHearts(false);
-      setClickedLetters(new Set());
-      
-      setTimeout(() => {
-        setCurrentAffirmation(nextAffirmation);
-        setCurrentHistoryIndex(nextIndex);
-        setIsResetting(false);
-      }, 300);
-    } else {
-      // Generate new phrase if at the end
-      generateNewPhrase();
-    }
-  };
-
-  const goToPreviousPhrase = () => {
-    if (isResetting || currentHistoryIndex <= 0) return;
-    
-    const previousIndex = currentHistoryIndex - 1;
-    const previousAffirmation = affirmationHistory[previousIndex];
-    
-    setIsResetting(true);
-    setShowHearts(false);
-    setClickedLetters(new Set());
-    
-    setTimeout(() => {
-      setCurrentAffirmation(previousAffirmation);
-      setCurrentHistoryIndex(previousIndex);
-      setIsResetting(false);
-    }, 300);
-  };
-
-  const handleBookmark = () => {
-    // Rate limit bookmark actions
-    if (!rateLimiter.isAllowed('bookmark', 30, 60000)) {
+  const getNewAffirmation = () => {
+    if (!rateLimiter.isAllowed('new-affirmation', 30, 60000)) {
+      console.warn('New affirmation rate limit exceeded');
       return;
     }
+
+    const allAffirmations = getAllAffirmations();
+    let newAffirmation;
+    do {
+      newAffirmation = allAffirmations[Math.floor(Math.random() * allAffirmations.length)];
+    } while (newAffirmation.text === currentAffirmation.text && allAffirmations.length > 1);
     
-    if (bookmarkedPhrases.includes(currentAffirmation.text)) {
-      // Remove from bookmarks
-      setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
+    addToHistory(currentAffirmation);
+    setCurrentAffirmation(newAffirmation);
+  };
+
+  const goToPreviousAffirmation = () => {
+    if (affirmationHistory.length > 0) {
+      const nextIndex = Math.min(historyIndex + 1, affirmationHistory.length - 1);
+      if (historyIndex === -1) {
+        // First time going back, add current to history
+        setAffirmationHistory(prev => [currentAffirmation, ...prev]);
+        setCurrentAffirmation(affirmationHistory[0]);
+        setHistoryIndex(0);
+      } else if (nextIndex < affirmationHistory.length) {
+        setCurrentAffirmation(affirmationHistory[nextIndex]);
+        setHistoryIndex(nextIndex);
+      }
+    }
+  };
+
+  const goToNextInHistory = () => {
+    if (historyIndex > 0) {
+      const nextIndex = historyIndex - 1;
+      setCurrentAffirmation(affirmationHistory[nextIndex]);
+      setHistoryIndex(nextIndex);
+    } else if (historyIndex === 0) {
+      // Go back to the most recent (current) affirmation
+      const mostRecent = affirmationHistory[0];
+      setCurrentAffirmation(mostRecent);
+      setHistoryIndex(-1);
+    }
+  };
+
+  const handleLetterClick = (index: number) => {
+    if (!rateLimiter.isAllowed('letter-click', 100, 60000)) {
+      return;
+    }
+
+    setLetterStates(prev => {
+      const newStates = [...prev];
+      if (!newStates[index].isClicked) {
+        newStates[index] = { isClicked: true, isAnimating: true };
+        
+        // Stop animation after a delay
+        setTimeout(() => {
+          setLetterStates(current => {
+            const updated = [...current];
+            if (updated[index]) {
+              updated[index].isAnimating = false;
+            }
+            return updated;
+          });
+        }, 3500);
+      }
+      return newStates;
+    });
+
+    // Check if all letters are clicked
+    const updatedStates = [...letterStates];
+    updatedStates[index] = { isClicked: true, isAnimating: true };
+    
+    if (updatedStates.every(state => state.isClicked)) {
+      triggerBurstAnimation();
+    }
+  };
+
+  const triggerBurstAnimation = () => {
+    const particles: BurstParticle[] = [];
+    const particleCount = 15;
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        id: generateSecureId(),
+        x: 50, // Start from center
+        y: 50,
+        endX: (Math.random() - 0.5) * 200, // Random end position
+        endY: (Math.random() - 0.5) * 200,
+        delay: Math.random() * 0.5, // Random delay up to 0.5s
+        category: currentAffirmation.category
+      });
+    }
+    
+    setBurstParticles(particles);
+    setShowBurst(true);
+    
+    // Clear burst after animation
+    setTimeout(() => {
+      setShowBurst(false);
+      setBurstParticles([]);
+    }, 2000);
+  };
+
+  const renderBurstIcon = (category: string) => {
+    switch (category) {
+      case 'love':
+        return <Heart className="w-6 h-6 text-pink-500" />;
+      case 'wealth':
+        return <DollarBillIcon className="w-6 h-6" />;
+      case 'health':
+        return <HealthIcon className="w-6 h-6" />;
+      case 'learning':
+        return <Star className="w-6 h-6 text-yellow-500" />;
+      default:
+        return <Heart className="w-6 h-6 text-pink-500" />;
+    }
+  };
+
+  const isBookmarked = bookmarks.some(bookmark => bookmark.text === currentAffirmation.text);
+
+  const handleBookmark = () => {
+    if (!rateLimiter.isAllowed('bookmark', 20, 60000)) {
+      console.warn('Bookmark rate limit exceeded');
+      return;
+    }
+
+    if (isBookmarked) {
+      setBookmarks(prev => prev.filter(bookmark => bookmark.text !== currentAffirmation.text));
     } else {
-      // Add to bookmarks (newest first)
-      setBookmarkedPhrases(prev => [currentAffirmation.text, ...prev]);
+      const newBookmark: BookmarkedAffirmation = {
+        id: generateSecureId(),
+        text: currentAffirmation.text,
+        category: currentAffirmation.category,
+        isPinned: false,
+        timestamp: Date.now()
+      };
+      setBookmarks(prev => [...prev, newBookmark]);
     }
   };
 
   const handleShare = async () => {
-    // Rate limit share actions
     if (!rateLimiter.isAllowed('share', 10, 60000)) {
+      console.warn('Share rate limit exceeded');
       return;
     }
-    
-    const url = `${window.location.origin}?phrase=${encodeURIComponent(currentAffirmation.text)}`;
+
+    const shareUrl = `${window.location.origin}?affirmation=${encodeURIComponent(currentAffirmation.text)}`;
     
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       setShowCopyAlert(true);
       setTimeout(() => setShowCopyAlert(false), 3000);
     } catch (err) {
-      // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setShowCopyAlert(true);
-      setTimeout(() => setShowCopyAlert(false), 3000);
+      console.error('Failed to copy to clipboard:', err);
     }
   };
 
-  const handleRemoveBookmark = (phraseToRemove: string) => {
-    // Rate limit delete actions
-    if (!rateLimiter.isAllowed('delete', 20, 60000)) {
-      return;
-    }
-    
-    setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== phraseToRemove));
-    setPinnedPhrases(prev => prev.filter(phrase => phrase !== phraseToRemove));
-    setDeleteConfirmation(null);
+  const togglePin = (id: string) => {
+    setBookmarks(prev => 
+      prev.map(bookmark => 
+        bookmark.id === id 
+          ? { ...bookmark, isPinned: !bookmark.isPinned }
+          : bookmark
+      )
+    );
   };
 
-  const handlePinPhrase = (phrase: string, e: React.MouseEvent) => {
-    // Rate limit pin actions
-    if (!rateLimiter.isAllowed('pin', 20, 60000)) {
-      return;
-    }
-    
-    e.stopPropagation(); // Prevent triggering the bookmark click
-    
-    if (pinnedPhrases.includes(phrase)) {
-      // Unpin the phrase
-      setPinnedPhrases(prev => prev.filter(p => p !== phrase));
+  const deleteBookmark = (id: string) => {
+    setBookmarks(prev => prev.filter(bookmark => bookmark.id !== id));
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      const allAffirmations = getAllAffirmations();
+      const results = allAffirmations.filter(affirmation =>
+        affirmation.text.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(results);
     } else {
-      // Pin the phrase to the top
-      setPinnedPhrases(prev => [phrase, ...prev]);
+      setSearchResults([]);
     }
   };
 
-  // Organize bookmarks: pinned first, then unpinned
-  const organizedBookmarks = [
-    ...pinnedPhrases.filter(phrase => bookmarkedPhrases.includes(phrase)),
-    ...bookmarkedPhrases.filter(phrase => !pinnedPhrases.includes(phrase))
-  ];
+  const selectAffirmation = (affirmation: {text: string, category: string}) => {
+    addToHistory(currentAffirmation);
+    setCurrentAffirmation(affirmation);
+    setShowSearch(false);
+    setShowBookmarks(false);
+  };
 
-  const handleBookmarkClick = (phrase: string) => {
-    // Rate limit affirmation selection
-    if (!rateLimiter.isAllowed('selectAffirmation', 30, 60000)) {
-      return;
+  const selectCategoryAffirmations = (category: keyof typeof affirmationsData) => {
+    const categoryAffirmations = affirmationsData[category].map(text => ({ text, category }));
+    setSearchResults(categoryAffirmations);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaY) > 50) { // Threshold to prevent accidental triggers
+      if (e.deltaY < 0) {
+        // Scrolling up - new affirmation
+        getNewAffirmation();
+      } else {
+        // Scrolling down - previous affirmation
+        goToPreviousAffirmation();
+      }
     }
+  };
+
+  const handleTouchStart = useRef({ y: 0, time: 0 });
+  const handleTouchMove = useRef({ y: 0 });
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    handleTouchStart.current = {
+      y: e.touches[0].clientY,
+      time: Date.now()
+    };
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    handleTouchMove.current = {
+      y: e.touches[0].clientY
+    };
+  };
+
+  const onTouchEnd = () => {
+    const deltaY = handleTouchStart.current.y - handleTouchMove.current.y;
+    const deltaTime = Date.now() - handleTouchStart.current.time;
     
-    // Navigate back to main view with the selected phrase
-    const affirmationObj = allAffirmations.find(a => a.text === phrase);
-    if (affirmationObj) {
-      setCurrentAffirmation(affirmationObj);
+    // Check for swipe (minimum distance and maximum time)
+    if (Math.abs(deltaY) > 50 && deltaTime < 500) {
+      if (deltaY > 0) {
+        // Swiping up - new affirmation
+        getNewAffirmation();
+      } else {
+        // Swiping down - previous affirmation
+        goToPreviousAffirmation();
+      }
     }
-    setCurrentView('main');
-    // Reset history and interactions for clean state
-    setAffirmationHistory([]);
-    setCurrentHistoryIndex(-1);
-    setClickedLetters(new Set());
-    setShowHearts(false);
-    setIsResetting(false);
-    // Reset category browsing
-    setSelectedCategory(null);
-    setCategoryAffirmations([]);
-    setUsedCategoryAffirmations(new Set());
   };
 
-  const handleDeleteClick = (phrase: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the bookmark click
-    setDeleteConfirmation(phrase);
-  };
-
-  // Handle URL parameters for shared phrases
+  // Check for shared affirmation in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedPhrase = urlParams.get('phrase');
-    if (sharedPhrase) {
-      const sanitizedAffirmation = sanitizeInput(decodeURIComponent(sharedPhrase));
-      const affirmationObj = allAffirmations.find(a => a.text === sanitizedAffirmation);
-      if (affirmationObj) {
-        setCurrentAffirmation(affirmationObj);
+    const sharedAffirmation = urlParams.get('affirmation');
+    if (sharedAffirmation) {
+      const allAffirmations = getAllAffirmations();
+      const foundAffirmation = allAffirmations.find(a => a.text === sharedAffirmation);
+      if (foundAffirmation) {
+        setCurrentAffirmation(foundAffirmation);
       }
-      // Clear the URL parameter
+      // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  // Handle scroll events
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (currentView !== 'main') return;
-      
-      e.preventDefault();
-      
-      if (e.deltaY > 0) {
-        // Scrolling down - go to next phrase
-        goToNextPhrase();
-      } else {
-        // Scrolling up - go to previous phrase
-        goToPreviousPhrase();
+  const renderLetters = () => {
+    const letters = currentAffirmation.text.split('');
+    let letterIndex = 0;
+
+    return letters.map((char, index) => {
+      if (char === ' ') {
+        return <span key={index} className="inline-block w-4"></span>;
       }
-    };
 
-    if (currentView === 'main') {
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      return () => window.removeEventListener('wheel', handleWheel);
-    }
-  }, [currentView, currentHistoryIndex, affirmationHistory, currentAffirmation, isResetting]);
+      const currentLetterIndex = letterIndex;
+      letterIndex++;
 
-  const handleLetterClick = (index: number) => {
-    if (letters[index] === ' ' || clickedLetters.has(index) || isResetting) return;
-    
-    setClickedLetters(prev => new Set([...prev, index]));
-  };
+      const state = letterStates[currentLetterIndex] || { isClicked: false, isAnimating: false };
+      const categoryClass = currentAffirmation.category === 'wealth' ? 'wealth' : 
+                           currentAffirmation.category === 'health' ? 'health' :
+                           currentAffirmation.category === 'learning' ? 'learning' : '';
 
-  // Touch handlers for swipe detection
-  const handleTouchStartSwipe = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart({
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
-    });
-  };
-
-  const handleTouchMoveSwipe = (e: React.TouchEvent) => {
-    setTouchEnd({
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
-    });
-  };
-
-  const handleTouchEndSwipe = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distanceX = touchStart.x - touchEnd.x;
-    const distanceY = touchStart.y - touchEnd.y;
-    const isVerticalSwipe = Math.abs(distanceY) > Math.abs(distanceX);
-    const minSwipeDistance = 50;
-    
-    if (isVerticalSwipe && Math.abs(distanceY) > minSwipeDistance) {
-      if (distanceY > 0) {
-        // Swipe up - next phrase
-        generateNewPhrase();
-      } else {
-        // Swipe down - previous phrase
-        goToPreviousPhrase();
-      }
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    setIsTouching(true);
-    setIsDragging(true);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    setIsTouching(false);
-    setIsDragging(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isTouching) return;
-    e.preventDefault();
-    
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    
-    if (element && element.hasAttribute('data-letter-index')) {
-      const index = parseInt(element.getAttribute('data-letter-index')!);
-      if (letters[index] !== ' ' && !clickedLetters.has(index) && !isResetting) {
-        setClickedLetters(prev => new Set([...prev, index]));
-      }
-    }
-  };
-
-  const handleMouseEnter = (index: number) => {
-    if ((isDragging || isTouching) && letters[index] !== ' ' && !clickedLetters.has(index) && !isResetting) {
-      setClickedLetters(prev => new Set([...prev, index]));
-    }
-  };
-
-  useEffect(() => {
-    if (clickedLetters.size === totalLetters && !showHearts) {
-      // Small delay before hearts appear
-      setTimeout(() => {
-        setShowHearts(true);
-      }, 500);
-    }
-  }, [clickedLetters.size, totalLetters, showHearts]);
-
-  // Get the appropriate color class based on category
-  const getLetterColorClass = (category: string) => {
-    switch (category) {
-      case 'wealth':
-        return 'letter-fill-wealth letter-glow-wealth';
-      case 'health':
-        return 'letter-fill-health letter-glow-health';
-      case 'learning':
-        return 'letter-fill-learning letter-glow-learning';
-      default:
-        return 'letter-fill letter-glow'; // Default pink for love
-    }
-  };
-
-  useEffect(() => {
-    if (showHearts) {
-      // Hearts animation lasts 3 seconds, then reset
-      const timer = setTimeout(() => {
-        setIsResetting(true);
-        setShowHearts(false);
-        setClickedLetters(new Set());
-        setIsProcessing(false); // Stop microphone flashing when animation starts
-        
-        // Brief delay before allowing interactions again
-        setTimeout(() => {
-          setIsResetting(false);
-        }, 300);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [showHearts]);
-
-  // Generate burst effects based on category
-  const generateBurstEffect = () => {
-    const category = currentAffirmation.category;
-    const hearts = [];
-    
-    for (let i = 0; i < 50; i++) {
-      const angle = (i * 7.2) + (Math.random() * 7.2); // More evenly distributed angles
-      const delay = Math.random() * 1000;
-      const duration = 1500 + Math.random() * 1500;
-      const size = 240 + Math.random() * 360;
-      
-      // Calculate end position to reach edges/corners of screen
-      const distance = 800 + Math.random() * 600; // Ensure hearts travel far enough off screen
-      const endX = Math.cos(angle * Math.PI / 180) * distance;
-      const endY = Math.sin(angle * Math.PI / 180) * distance;
-      
-      let IconComponent;
-      let colorClass;
-      
-      switch (category) {
-        case 'wealth':
-          IconComponent = DollarBillIcon;
-          colorClass = 'text-green-500';
-          break;
-        case 'health':
-          IconComponent = HealthIcon;
-          colorClass = 'text-blue-500';
-          break;
-        case 'learning':
-          IconComponent = Star;
-          colorClass = 'text-yellow-500';
-          break;
-        default:
-          IconComponent = Heart;
-          colorClass = 'text-pink-500';
-      }
-      
-      hearts.push(
-        <IconComponent
-          key={i}
-          className={`absolute ${colorClass} pointer-events-none`}
+      return (
+        <span
+          key={index}
+          className={`
+            inline-block cursor-pointer transition-all duration-300 text-6xl md:text-7xl lg:text-8xl font-bold
+            ${state.isClicked 
+              ? `letter-fill${categoryClass ? `-${categoryClass}` : ''} letter-sparkle ${state.isAnimating ? `letter-glow${categoryClass ? `-${categoryClass}` : ''}` : ''}` 
+              : 'text-gray-800 hover:text-gray-600'
+            }
+          `}
+          onClick={() => handleLetterClick(currentLetterIndex)}
           style={{
-            left: '50%',
-            top: '50%',
-            width: `${size}px`,
-            height: `${size}px`,
-            animation: `heartBurst ${duration}ms ease-out ${delay}ms both`,
-            '--end-x': `${endX}px`,
-            '--end-y': `${endY}px`,
-            zIndex: 1000,
-          } as React.CSSProperties}
-          fill="currentColor"
-        />
+            fontFamily: "'Fredoka One', cursive",
+            textShadow: state.isClicked ? 'none' : '2px 2px 4px rgba(0,0,0,0.1)'
+          }}
+        >
+          {char}
+        </span>
       );
-    }
-    return hearts;
+    });
   };
 
-  if (currentView === 'search') {
+  // Sort bookmarks: pinned first, then by timestamp (newest first)
+  const sortedBookmarks = [...bookmarks].sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return b.timestamp - a.timestamp;
+  });
+
+  if (showBookmarks) {
     return (
-      <div className="min-h-screen bg-white p-4">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => setCurrentView('main')}
-            className="hover:scale-110 transition-all duration-200"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800 ml-1">Search</h1>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search for affirmations..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => setShowBookmarks(false)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back</span>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              Saved Affirmations
+            </h1>
+            <div className="w-16"></div>
           </div>
-        </div>
 
-        {/* Topics */}
-        {searchQuery === '' && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Browse by Topic</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {topics.map((topic, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleTopicSearch(topic)}
-                  className="p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-left"
+          {sortedBookmarks.length === 0 ? (
+            <div className="text-center py-12">
+              <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No saved affirmations yet</p>
+              <p className="text-gray-400">Bookmark your favorites to see them here</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedBookmarks.map((bookmark) => (
+                <div
+                  key={bookmark.id}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-white/20"
                 >
-                  {topic.name}
-                </button>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p 
+                        className="text-lg font-medium text-gray-800 cursor-pointer hover:text-gray-600 transition-colors leading-relaxed"
+                        onClick={() => selectAffirmation({ text: bookmark.text, category: bookmark.category })}
+                        style={{ fontFamily: "'Fredoka', sans-serif" }}
+                      >
+                        {bookmark.text}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`
+                          px-2 py-1 rounded-full text-xs font-medium
+                          ${bookmark.category === 'love' ? 'bg-pink-100 text-pink-700' :
+                            bookmark.category === 'wealth' ? 'bg-green-100 text-green-700' :
+                            bookmark.category === 'health' ? 'bg-blue-100 text-blue-700' :
+                            'bg-yellow-100 text-yellow-700'}
+                        `}>
+                          {bookmark.category}
+                        </span>
+                        {bookmark.isPinned && (
+                          <span className="text-blue-500 text-xs font-medium">📌 Pinned</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => togglePin(bookmark.id)}
+                        className={`p-2 rounded-full transition-all duration-200 ${
+                          bookmark.isPinned 
+                            ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                        }`}
+                        title={bookmark.isPinned ? 'Unpin' : 'Pin to top'}
+                      >
+                        <Thumbtack className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteBookmark(bookmark.id)}
+                        className="p-2 rounded-full bg-red-100 text-red-500 hover:bg-red-200 transition-all duration-200"
+                        title="Delete bookmark"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Search Results */}
-        <div className="space-y-1">
-          {searchResults.length === 0 && searchQuery !== '' ? (
-            <p className="text-gray-500 text-center mt-12">No affirmations found for "{searchQuery}"</p>
-          ) : (
-            searchResults.map((phrase, index) => (
-              <div 
-                key={index} 
-                className="bg-gray-50 p-3 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => handleSearchResultClick(phrase)}
-              >
-                <p className="text-gray-800">{phrase}</p>
-              </div>
-            ))
           )}
         </div>
       </div>
     );
   }
 
-  if (currentView === 'bookmarks') {
+  if (showSearch) {
     return (
-      <div className="min-h-screen bg-white p-4">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => setCurrentView('main')}
-            className="hover:scale-110 transition-all duration-200"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800 ml-1">Bookmarks</h1>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => setShowSearch(false)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back</span>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "'Fredoka One', cursive" }}>
+              Search Affirmations
+            </h1>
+            <div className="w-16"></div>
+          </div>
 
-        {/* Bookmarks List */}
-        <div className="space-y-1">
-          {bookmarkedPhrases.length === 0 ? (
-            <p className="text-gray-500 text-center mt-12">No bookmarks yet. Bookmark your favorite affirmations!</p>
-          ) : (
-            organizedBookmarks.map((phrase, index) => {
-              const isPinned = pinnedPhrases.includes(phrase);
-              return (
-              <div 
-                key={index} 
-                className={`${isPinned ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'} p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors`}
-                onClick={() => handleBookmarkClick(phrase)}
+          <div className="mb-8">
+            <input
+              type="text"
+              placeholder="Search for affirmations..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full px-6 py-4 text-lg rounded-xl border border-gray-200 focus:border-purple-300 focus:ring-2 focus:ring-purple-100 outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm"
+              style={{ fontFamily: "'Fredoka', sans-serif" }}
+            />
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+              Browse by Topic
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button
+                onClick={() => selectCategoryAffirmations('love')}
+                className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  {/* Pin Icon */}
-                  <button
-                    onClick={(e) => handlePinPhrase(phrase, e)}
-                    className="p-1 hover:scale-110 transition-all duration-200 flex-shrink-0"
-                    title={isPinned ? "Unpin" : "Pin to top"}
-                  >
-                    <img 
-                      src="/thumbtack (3).png" 
-                      alt="Pin" 
-                      className="w-4 h-4"
-                      style={{
-                        filter: isPinned 
-                          ? 'brightness(0) saturate(100%) invert(58%) sepia(96%) saturate(1458%) hue-rotate(201deg) brightness(97%) contrast(96%)'
-                          : 'grayscale(100%) brightness(0.7) opacity(0.6)'
-                      }}
-                    />
-                  </button>
-                  
-                  <p className="text-gray-800 flex-1">{phrase}</p>
-                </div>
-                
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Delete Icon */}
-                  <button
-                    onClick={(e) => handleDeleteClick(phrase, e)}
-                    className="p-2 text-blue-500 hover:scale-110 transition-all duration-200"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Delete Confirmation Modal */}
-        {deleteConfirmation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Delete Bookmark</h3>
-              <p className="text-gray-600 mb-6">Are you sure you want to delete this bookmark?</p>
-              <p className="text-gray-800 font-medium mb-6 p-3 bg-gray-50 rounded italic">"{deleteConfirmation}"</p>
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setDeleteConfirmation(null)}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  No
-                </button>
-                <button
-                  onClick={() => handleRemoveBookmark(deleteConfirmation)}
-                  className="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
-                >
-                  Yes, Delete
-                </button>
-              </div>
+                #Love
+              </button>
+              <button
+                onClick={() => selectCategoryAffirmations('wealth')}
+                className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
+              >
+                #Wealth
+              </button>
+              <button
+                onClick={() => selectCategoryAffirmations('health')}
+                className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
+              >
+                #Abundance
+              </button>
+              <button
+                onClick={() => selectCategoryAffirmations('learning')}
+                className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
+              >
+                #Learning
+              </button>
+              <button
+                className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+                style={{ fontFamily: "'Fredoka', sans-serif" }}
+              >
+                #Natural
+              </button>
             </div>
           </div>
-        )}
+
+          {searchResults.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-700" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                {searchQuery ? `Search Results (${searchResults.length})` : `Results (${searchResults.length})`}
+              </h3>
+              {searchResults.map((result, index) => (
+                <div
+                  key={index}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-white/20 cursor-pointer"
+                  onClick={() => selectAffirmation(result)}
+                >
+                  <p className="text-lg font-medium text-gray-800 leading-relaxed" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+                    {result.text}
+                  </p>
+                  <span className={`
+                    inline-block mt-2 px-2 py-1 rounded-full text-xs font-medium
+                    ${result.category === 'love' ? 'bg-pink-100 text-pink-700' :
+                      result.category === 'wealth' ? 'bg-green-100 text-green-700' :
+                      result.category === 'health' ? 'bg-blue-100 text-blue-700' :
+                      'bg-yellow-100 text-yellow-700'}
+                  `}>
+                    {result.category}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {searchQuery && searchResults.length === 0 && (
+            <div className="text-center py-12">
+              <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No affirmations found</p>
+              <p className="text-gray-400">Try a different search term</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div 
-      className="min-h-screen bg-white flex flex-col items-center justify-center p-4 relative overflow-hidden"
-      onTouchStart={handleTouchStartSwipe}
-      onTouchMove={handleTouchMoveSwipe}
-      onTouchEnd={handleTouchEndSwipe}
+      className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex flex-col relative overflow-hidden"
+      onWheel={handleWheel}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       {/* Top Navigation */}
-      <div className="absolute top-4 left-0 right-0 z-50 px-4">
-        <div className="flex justify-between items-center">
-          {/* Goaly Button */}
+      <nav className="flex items-center justify-between p-4 relative z-40">
+        <button
+          onClick={getNewAffirmation}
+          className="text-2xl font-bold text-gray-800 hover:text-gray-600 transition-colors"
+          style={{ fontFamily: "'Fredoka One', cursive" }}
+        >
+          Goaly
+        </button>
+        
+        <div className="flex items-center gap-4">
           <button
-            onClick={returnToMainFeed}
-            className="px-3 py-2 hover:scale-110 transition-all duration-200 flex items-center justify-center"
+            onClick={() => setShowBookmarks(true)}
+            className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200"
           >
-            <span className="text-xl font-black text-gray-700" style={{ fontFamily: '"Fredoka One", sans-serif' }}>
-              Goaly
-            </span>
+            <Bookmark className="w-6 h-6 text-gray-700" />
           </button>
-
-          {/* Bookmarks Button */}
+          
           <button
-            onClick={() => setCurrentView('bookmarks')}
-            className="p-3 hover:scale-110 transition-all duration-200"
+            onClick={getNewAffirmation}
+            className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200"
           >
-            <img 
-              src="/save (1).png" 
-              alt="Bookmarks" 
-              className="w-6 h-6"
-            />
+            <Plus className="w-6 h-6 text-gray-700" />
           </button>
-
-          {/* Plus Icon */}
+          
           <button
-            onClick={() => setShowPlusPopup(true)}
-            className="p-3 hover:scale-110 transition-all duration-200"
-          >
-            <img 
-              src="/plus.png" 
-              alt="Plus" 
-              className="w-8 h-8"
-            />
-          </button>
-
-          {/* Search Icon */}
-          <button
-            onClick={() => setCurrentView('search')}
-            className="p-3 hover:scale-110 transition-all duration-200"
+            onClick={() => setShowSearch(true)}
+            className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200"
           >
             <Search className="w-6 h-6 text-gray-700" />
           </button>
-
-          {/* 3-Line Menu Icon */}
-          <button
-            className="p-3 hover:scale-110 transition-all duration-200"
-          >
-            <div className="flex flex-col gap-1">
-              <div className="w-6 h-0.5 bg-gray-700"></div>
-              <div className="w-6 h-0.5 bg-gray-700"></div>
-              <div className="w-6 h-0.5 bg-gray-700"></div>
-            </div>
+          
+          <button className="p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200">
+            <Menu className="w-6 h-6 text-gray-700" />
           </button>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-8 relative">
+        <div className="text-center max-w-4xl mx-auto relative">
+          <div className="leading-tight" style={{ lineHeight: '0.9' }}>
+            {renderLetters()}
+          </div>
+          
+          {/* Burst Animation */}
+          {showBurst && (
+            <div className="absolute inset-0 pointer-events-none">
+              {burstParticles.map((particle) => (
+                <div
+                  key={particle.id}
+                  className="absolute"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    transform: 'translate(-50%, -50%)',
+                    animation: `heartBurst 1.5s ease-out ${particle.delay}s forwards`,
+                    '--end-x': `${particle.endX}px`,
+                    '--end-y': `${particle.endY}px`,
+                  } as React.CSSProperties}
+                >
+                  {renderBurstIcon(particle.category)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Bookmark and Share Icons - Right Side Edge */}
+      {/* Right Side Icons */}
       <div className="absolute right-4 top-1/2 transform translate-y-20 z-50 flex flex-col gap-3">
         {/* Microphone Icon */}
         <button
@@ -1585,120 +997,17 @@ function App() {
         </div>
       )}
 
-      {/* Plus Icon Popup Modal */}
-      {showPlusPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-            {/* Close X button */}
-            <button
-              onClick={() => setShowPlusPopup(false)}
-              className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
-            >
-              #Love
-            </button>
-            
-              className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
-            <div className="pr-8">
-              #Wealth
-                Thank you for your interest in submitting a goal or affirmation to share on the app! 
-                Since we're still getting set up, please submit it via the help desk{' '}
-                <a 
-              className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
-                  target="_blank" 
-              #Abundance
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  here
-              className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
-                . Thanks!
-              #Learning
-            </button>
-            <button
-              onClick={() => handleCategoryFilter('natural')}
-              className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
-            >
-              #Natural
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Text */}
-      <div 
-        className="text-center select-none flex-1 flex items-center w-full px-2 sm:px-4 md:px-6 lg:px-8 -mt-8 sm:mt-0"
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onTouchMove={handleTouchMove}
-      >
-        <div className="flex flex-wrap justify-center items-center gap-x-1 sm:gap-x-2 md:gap-x-3 lg:gap-x-4 xl:gap-x-6 leading-none w-full">
-          {currentAffirmation.text.split(' ').map((word, wordIndex) => (
-            <div key={wordIndex} className="flex mr-[2vw] sm:mr-[1.5vw] md:mr-[1.2vw] lg:mr-[1vw] xl:mr-[0.8vw] last:mr-0">
-              {word.split('').map((letter, letterIndex) => {
-                const globalIndex = currentAffirmation.text.split('').findIndex((char, i) => {
-                  const wordsSoFar = currentAffirmation.text.split(' ').slice(0, wordIndex).join(' ');
-                  const lettersSoFar = wordsSoFar.length + (wordsSoFar ? 1 : 0) + letterIndex;
-                  return i === lettersSoFar;
-                });
-                
-                return (
-                  <span
-                    key={letterIndex}
-                    data-letter-index={globalIndex}
-                    className={`
-                      inline-block cursor-pointer
-                      ${dynamicFontSize}
-                      font-black
-                      transition-all duration-500
-                      ${clickedLetters.has(globalIndex) 
-                        ? `${getLetterColorClass(currentAffirmation.category)} transition-none`
-                        : ''
-                      }
-                    `}
-                    style={{
-                      fontFamily: '"Fredoka One", "Fredoka", sans-serif',
-                      fontWeight: '900',
-                      color: clickedLetters.has(globalIndex) ? 'transparent' : '#ffffff',
-                      textShadow: !clickedLetters.has(globalIndex) 
-                        ? window.innerWidth <= 768 
-                          ? '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 4px rgba(0,0,0,0.3)'
-                          : '0.15vw 0.15vw 0.3vw rgba(0,0,0,0.4)'
-                        : 'none',
-                      WebkitTextStroke: window.innerWidth <= 768 ? 'none' : '0.2vw #000000',
-                      textStroke: window.innerWidth <= 768 ? 'none' : '0.2vw #000000',
-                    }}
-                    onClick={() => handleLetterClick(globalIndex)}
-                    onTouchStart={() => handleLetterClick(globalIndex)}
-                    onMouseEnter={() => handleMouseEnter(globalIndex)}
-                  >
-                    {letter}
-                  </span>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Navigation Arrows */}
-
-      {/* Hearts burst animation */}
-      {showHearts && (
-        <div className="absolute inset-0 pointer-events-none">
-          {generateBurstEffect()}
-        </div>
-      )}
-      
       {/* Instructions */}
-      <div className="absolute bottom-20 sm:bottom-4 md:bottom-6 lg:bottom-8 left-1/2 transform -translate-x-1/2 text-gray-400 text-xs sm:text-sm md:text-base text-center flex items-center gap-2 px-4 pb-2">
-        <Sparkles className="w-4 h-4 text-yellow-500" />
-        <p className="whitespace-nowrap">Trace Goal or Scroll Up!</p>
-        <Sparkles className="w-4 h-4 text-yellow-500" />
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+        <p className="text-gray-600 text-sm" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+          Click each letter to make it glow ✨
+        </p>
+        <p className="text-gray-500 text-xs mt-1" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+          Scroll or swipe for new affirmations
+        </p>
       </div>
     </div>
   );
-}
+};
 
 export default App;
