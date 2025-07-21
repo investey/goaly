@@ -465,7 +465,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        return;
+        getNewAffirmation();
       }
       
       if (event.key === 'ArrowUp') {
@@ -1614,38 +1614,32 @@ function App() {
             
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => setShowPlusPopup(false)}
+                onClick={() => handleCategoryFilter('love')}
                 className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
               >
                 #Love
               </button>
               <button
-                onClick={() => setShowPlusPopup(false)}
+                onClick={() => handleCategoryFilter('wealth')}
                 className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
               >
                 #Wealth
               </button>
               <button
-                onClick={() => setShowPlusPopup(false)}
+                onClick={() => handleCategoryFilter('health')}
                 className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
               >
-                #Health
+                #Abundance
               </button>
               <button
-                onClick={() => setShowPlusPopup(false)}
+                onClick={() => handleCategoryFilter('learning')}
                 className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
               >
                 #Learning
               </button>
               <button
-                onClick={() => setShowPlusPopup(false)}
-                className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
-              >
-                #Abundance
-              </button>
-              <button
-                onClick={() => setShowPlusPopup(false)}
-                className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+                onClick={() => handleCategoryFilter('natural')}
+                className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
               >
                 #Natural
               </button>
