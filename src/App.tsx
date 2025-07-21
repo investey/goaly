@@ -435,7 +435,6 @@ function App() {
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [bookmarkedAffirmations, setBookmarkedAffirmations] = useState<string[]>([]);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load bookmarks from localStorage on component mount
@@ -443,7 +442,6 @@ function App() {
     const savedBookmarks = secureStorage.getItem('affirmation-bookmarks');
     if (savedBookmarks) {
       setBookmarkedPhrases(savedBookmarks);
-      setBookmarkedAffirmations(savedBookmarks.map((bookmark: any) => bookmark.id));
     }
     const savedPinned = secureStorage.getItem('affirmation-pinned');
     if (savedPinned) {
@@ -451,15 +449,9 @@ function App() {
     }
   }, []);
 
-  // Function to check if an affirmation is bookmarked
-  const isBookmarked = (affirmationId: string): boolean => {
-    return bookmarkedAffirmations.includes(affirmationId);
-  };
-
   // Save bookmarks to localStorage whenever bookmarks change
   useEffect(() => {
     secureStorage.setItem('affirmation-bookmarks', bookmarkedPhrases);
-    setBookmarkedAffirmations(bookmarkedPhrases.map(bookmark => bookmark.id));
   }, [bookmarkedPhrases]);
 
   // Save pinned phrases to localStorage whenever they change
@@ -1577,7 +1569,7 @@ function App() {
           onClick={handleBookmark}
           className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
         >
-          {bookmarkedPhrases.includes(currentAffirmation.text) ? (
+          {isBookmarked ? (
             <BookmarkCheck className="w-6 h-6 text-blue-500" />
           ) : (
             <Bookmark className="w-6 h-6 text-gray-600" />
