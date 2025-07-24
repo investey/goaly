@@ -1610,8 +1610,8 @@ function App() {
                   here
               className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
                 . Thanks!
-               </a>
-             </div>
+               Natural
+             </button>
             <button
               onClick={() => handleCategoryFilter('natural')}
               className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
