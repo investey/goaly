@@ -465,7 +465,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        getNewAffirmation();
+        return;
       }
       
       if (event.key === 'ArrowUp') {
@@ -631,7 +631,7 @@ function App() {
         }, 100);
       } else {
         setIsListening(false);
-  const handleShare = async () => {
+      }
     };
 
     try {
@@ -998,6 +998,9 @@ function App() {
       setBookmarks(updatedBookmarks);
       secureStorage.setItem('bookmarks', updatedBookmarks);
     }
+  };
+
+  const handleShare = async () => {
     // Rate limit share actions
     if (!rateLimiter.isAllowed('share', 10, 60000)) {
       return;
