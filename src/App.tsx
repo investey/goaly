@@ -465,7 +465,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        getNewAffirmation();
+        return;
       }
       
       if (event.key === 'ArrowUp') {
@@ -1592,32 +1592,25 @@ function App() {
             {/* Close X button */}
             <button
               onClick={() => setShowPlusPopup(false)}
-              className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
-              #Love
+              <X className="w-6 h-6" />
             </button>
             
-              className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Submit Your Goal</h3>
             <div className="pr-8">
-              #Wealth
+              <p className="text-gray-600 mb-4">
                 Thank you for your interest in submitting a goal or affirmation to share on the app! 
                 Since we're still getting set up, please submit it via the help desk{' '}
                 <a 
-              className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                  href="https://help.example.com" 
                   target="_blank" 
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   here
-              className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
-                . Thanks!
                 </a>
-               Natural
-             </button>
-            <button
-              onClick={() => handleCategoryFilter('natural')}
-              className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
-            >
-              #Natural
+                . Thanks!
+              </p>
             </div>
           </div>
         </div>
