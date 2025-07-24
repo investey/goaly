@@ -1605,7 +1605,6 @@ function App() {
                 <a 
               className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
                   target="_blank" 
-              #Abundance
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   here
