@@ -2,10 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
+import { secureStorage, rateLimiter } from './utils/security';
 import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
-const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
-const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
-
 
 const loveAffirmations = [
   "I am worthy of deep love",
@@ -434,20 +432,14 @@ function App() {
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
   // Check if current affirmation is bookmarked
-  const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
-  const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
-  
-  // Check if current affirmation is bookmarked
   const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
+
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Check if current affirmation is bookmarked
-  const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
@@ -990,13 +982,21 @@ function App() {
   };
 
   const handleBookmark = () => {
-    if (bookmarkedPhrases.includes(currentAffirmation.text)) {
-      // Remove from bookmarks
-      setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
-      setPinnedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
+    // Rate limit bookmark actions
+    if (!rateLimiter.isAllowed('bookmark', 20, 60000)) {
+      return;
+    }
+    
+    const currentText = currentAffirmation.text;
+    
+    if (isBookmarked) {
+      // Remove from bookmarked phrases
+      setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentText));
+      // Also remove from pinned if it was pinned
+      setPinnedPhrases(prev => prev.filter(phrase => phrase !== currentText));
     } else {
-      // Add to bookmarks
-      setBookmarkedPhrases(prev => [...prev, currentAffirmation.text]);
+      // Add to bookmarked phrases
+      setBookmarkedPhrases(prev => [...prev, currentText]);
     }
   };
 
