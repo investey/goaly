@@ -631,7 +631,7 @@ function App() {
         }, 100);
       } else {
         setIsListening(false);
-      }
+  const handleShare = async () => {
     };
 
     try {
