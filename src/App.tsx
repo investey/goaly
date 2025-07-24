@@ -434,10 +434,11 @@ function App() {
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
   // Check if current affirmation is bookmarked
-  const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
-
   const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
   const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
+  
+  // Check if current affirmation is bookmarked
+  const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
