@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bookmark, Share2, Plus, Search, Menu, ArrowLeft, Thumbtack, X, Heart, Star } from 'lucide-react';
+import { Bookmark, Share2, Plus, Search, Menu, ArrowLeft, ThumbsUp as Thumbtack, X, Heart, Star } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
 import { secureStorage, generateSecureId, rateLimiter } from './utils/security';
