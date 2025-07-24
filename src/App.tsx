@@ -4,6 +4,9 @@ import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
 import { secureStorage, rateLimiter } from './utils/security';
 import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
+const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
+const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
+
 
 const loveAffirmations = [
   "I am worthy of deep love",
