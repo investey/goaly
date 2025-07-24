@@ -1610,6 +1610,7 @@ function App() {
                   here
               className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
                 . Thanks!
+                </a>
                Natural
              </button>
             <button
