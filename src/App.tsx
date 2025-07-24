@@ -414,7 +414,6 @@ function App() {
   const [currentAffirmationIndex, setCurrentAffirmationIndex] = useState(0);
   const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [clickedLetters, setClickedLetters] = useState<Set<number>>(new Set());
   const [showHearts, setShowHearts] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -437,6 +436,9 @@ function App() {
   const [recognitionInstance, setRecognitionInstance] = useState<SpeechRecognition | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if current affirmation is bookmarked
+  const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
 
   // Load bookmarks from localStorage on component mount
   useEffect(() => {
