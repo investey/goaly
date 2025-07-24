@@ -979,21 +979,25 @@ function App() {
   };
 
   const handleBookmark = () => {
-    // Rate limit bookmark actions
-    if (!rateLimiter.isAllowed('bookmark', 30, 60000)) {
-      return;
-    }
-    
-    if (bookmarkedPhrases.includes(currentAffirmation.text)) {
-      // Remove from bookmarks
-      setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
-    } else {
-      // Add to bookmarks (newest first)
-      setBookmarkedPhrases(prev => [currentAffirmation.text, ...prev]);
-    }
-  };
+    const affirmationToBookmark = {
+      id: currentAffirmation.id,
+      text: currentAffirmation.text,
+      category: currentAffirmation.category,
+      bookmarkedAt: new Date().toISOString(),
+      isPinned: false
+    };
 
-  const handleShare = async () => {
+    if (isBookmarked) {
+      // Remove from bookmarks
+      const updatedBookmarks = bookmarks.filter(b => b.id !== currentAffirmation.id);
+      setBookmarks(updatedBookmarks);
+      secureStorage.setItem('bookmarks', updatedBookmarks);
+    } else {
+      // Add to bookmarks
+      const updatedBookmarks = [...bookmarks, affirmationToBookmark];
+      setBookmarks(updatedBookmarks);
+      secureStorage.setItem('bookmarks', updatedBookmarks);
+    }
     // Rate limit share actions
     if (!rateLimiter.isAllowed('share', 10, 60000)) {
       return;
