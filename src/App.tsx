@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck, ArrowLeft, X, Search, Banknote, Star, User, Plus } from 'lucide-react';
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
+import { secureStorage, rateLimiter } from './utils/security';
 import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
 
 const loveAffirmations = [
@@ -430,6 +431,11 @@ function App() {
   const [categoryAffirmations, setCategoryAffirmations] = useState<typeof allAffirmations>([]);
   const [usedCategoryAffirmations, setUsedCategoryAffirmations] = useState<Set<string>>(new Set());
   const [showPlusPopup, setShowPlusPopup] = useState(false);
+  // Check if current affirmation is bookmarked
+  const isBookmarked = bookmarkedPhrases.includes(currentAffirmation.text);
+
+  const [bookmarkedPhrases, setBookmarkedPhrases] = useState<string[]>([]);
+  const [pinnedPhrases, setPinnedPhrases] = useState<string[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [isContinuousMode, setIsContinuousMode] = useState(false);
   const [wasHoldActivated, setWasHoldActivated] = useState(false);
