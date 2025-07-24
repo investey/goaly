@@ -465,7 +465,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        getNewAffirmation();
+        return;
       }
       
       if (event.key === 'ArrowUp') {
@@ -687,6 +687,10 @@ function App() {
     }
   };
 
+  const triggerBurstAnimation = () => {
+    setShowHearts(true);
+  };
+
   const handleMicrophoneClick = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition not supported in this browser');
@@ -695,7 +699,7 @@ function App() {
 
     setIsProcessing(true);
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
     recognition.continuous = true;
@@ -704,7 +708,7 @@ function App() {
 
     let hasProcessed = false;
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       if (hasProcessed) return;
       hasProcessed = true;
 
@@ -978,6 +982,10 @@ function App() {
     }, 300);
   };
 
+  const goToPreviousAffirmation = () => {
+    goToPreviousPhrase();
+  };
+
   const handleBookmark = () => {
     // Rate limit bookmark actions
     if (!rateLimiter.isAllowed('bookmark', 30, 60000)) {
@@ -1079,6 +1087,26 @@ function App() {
   const handleDeleteClick = (phrase: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the bookmark click
     setDeleteConfirmation(phrase);
+  };
+
+  const handleCategoryFilter = (category: string) => {
+    // Filter affirmations by category
+    const filteredAffirmations = allAffirmations.filter(affirmation => 
+      affirmation.category === category
+    );
+    
+    if (filteredAffirmations.length > 0) {
+      const randomAffirmation = filteredAffirmations[Math.floor(Math.random() * filteredAffirmations.length)];
+      setCurrentAffirmation(randomAffirmation);
+      setCurrentView('main');
+      setShowPlusPopup(false);
+      // Reset history and interactions for clean state
+      setAffirmationHistory([]);
+      setCurrentHistoryIndex(-1);
+      setClickedLetters(new Set());
+      setShowHearts(false);
+      setIsResetting(false);
+    }
   };
 
   // Handle URL parameters for shared phrases
@@ -1592,30 +1620,58 @@ function App() {
             {/* Close X button */}
             <button
               onClick={() => setShowPlusPopup(false)}
-              className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
-              #Love
+              <X className="w-6 h-6" />
             </button>
             
-              className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Choose Category</h3>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button
+                onClick={() => handleCategoryFilter('love')}
+                className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
+              >
+                #Love
+              </button>
+              <button
+                onClick={() => handleCategoryFilter('wealth')}
+                className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
+              >
+                #Wealth
+              </button>
+              <button
+                onClick={() => handleCategoryFilter('health')}
+                className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+              >
+                #Health
+              </button>
+              <button
+                onClick={() => handleCategoryFilter('learning')}
+                className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
+              >
+                #Learning
+              </button>
+              <button
+                onClick={() => handleCategoryFilter('natural')}
+                className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+              >
+                #Natural
+              </button>
+            </div>
+            
             <div className="pr-8">
-              #Wealth
+              <p className="text-gray-600 text-sm">
                 Thank you for your interest in submitting a goal or affirmation to share on the app! 
                 Since we're still getting set up, please submit it via the help desk{' '}
                 <a 
-              className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                  href="https://help.example.com"
                   target="_blank" 
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   here
-              className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
-                . Thanks!
                 </a>
-            <button
-              onClick={() => handleCategoryFilter('natural')}
-              className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
-            >
-              #Natural
+                . Thanks!
+              </p>
             </div>
           </div>
         </div>
