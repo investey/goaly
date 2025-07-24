@@ -55,18 +55,25 @@ export function useAffirmations() {
   }, [bookmarks]);
 
   const toggleBookmark = useCallback((affirmation: Affirmation) => {
+    console.log('toggleBookmark called with:', affirmation);
     setBookmarks(prev => {
+      console.log('Current bookmarks:', prev);
       const existingIndex = prev.findIndex(bookmark => bookmark.id === affirmation.id);
+      console.log('Existing index:', existingIndex);
       
       if (existingIndex >= 0) {
+        console.log('Removing bookmark');
         return prev.filter((_, index) => index !== existingIndex);
       } else {
+        console.log('Adding bookmark');
         const newBookmark: BookmarkedAffirmation = {
           ...affirmation,
           isPinned: false,
           bookmarkedAt: Date.now(),
         };
-        return [...prev, newBookmark];
+        const newBookmarks = [...prev, newBookmark];
+        console.log('New bookmarks:', newBookmarks);
+        return newBookmarks;
       }
     });
   }, [setBookmarks]);

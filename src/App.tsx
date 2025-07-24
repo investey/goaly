@@ -3,6 +3,7 @@ import { Heart, Sparkles, ChevronUp, ChevronDown, Bookmark, Link, BookmarkCheck,
 import { DollarBillIcon } from './components/DollarBillIcon';
 import { HealthIcon } from './components/HealthIcon';
 import { sanitizeInput, secureStorage, rateLimiter } from './utils/security';
+import { affirmations } from './data/affirmations';
 
 const loveAffirmations = [
   "I am worthy of deep love",
@@ -459,6 +460,18 @@ function App() {
   useEffect(() => {
     secureStorage.setItem('affirmation-pinned', pinnedPhrases);
   }, [pinnedPhrases]);
+
+  // Handle URL parameters for shared affirmations
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedAffirmation = urlParams.get('affirmation');
+    if (sharedAffirmation) {
+      const foundAffirmation = affirmations.find(a => a.text === decodeURIComponent(sharedAffirmation));
+      if (foundAffirmation) {
+        setCurrentAffirmation(foundAffirmation);
+      }
+    }
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -1621,7 +1634,10 @@ function App() {
         
         {/* Bookmark icon */}
         <button
-          onClick={handleBookmark}
+          onClick={() => {
+            console.log('Bookmark clicked for:', currentAffirmation.text);
+            handleBookmark();
+          }}
           className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
         >
           {isBookmarked ? (
