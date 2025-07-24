@@ -979,24 +979,13 @@ function App() {
   };
 
   const handleBookmark = () => {
-    const affirmationToBookmark = {
-      id: currentAffirmation.id,
-      text: currentAffirmation.text,
-      category: currentAffirmation.category,
-      bookmarkedAt: new Date().toISOString(),
-      isPinned: false
-    };
-
-    if (isBookmarked) {
+    if (bookmarkedPhrases.includes(currentAffirmation.text)) {
       // Remove from bookmarks
-      const updatedBookmarks = bookmarks.filter(b => b.id !== currentAffirmation.id);
-      setBookmarks(updatedBookmarks);
-      secureStorage.setItem('bookmarks', updatedBookmarks);
+      setBookmarkedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
+      setPinnedPhrases(prev => prev.filter(phrase => phrase !== currentAffirmation.text));
     } else {
       // Add to bookmarks
-      const updatedBookmarks = [...bookmarks, affirmationToBookmark];
-      setBookmarks(updatedBookmarks);
-      secureStorage.setItem('bookmarks', updatedBookmarks);
+      setBookmarkedPhrases(prev => [...prev, currentAffirmation.text]);
     }
   };
 
