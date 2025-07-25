@@ -2,14 +2,20 @@ import React from 'react';
 
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-4">
-          Goaly Test
+    <div style={{ 
+      width: '100vw', 
+      height: '100vh', 
+      backgroundColor: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'black'
+    }}>
+      <div>
+        <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
+          Goaly App Test
         </h1>
-        <p className="text-gray-600">
-          If you can see this, React is working!
-        </p>
+        <p>Can you see this text?</p>
       </div>
     </div>
   );
