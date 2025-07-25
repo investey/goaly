@@ -1391,6 +1391,7 @@ function App() {
               </div>
             ))
           )}
+          <span>Microphone access denied. Please enable microphone permissions in your browser settings to use voice commands.</span>
         </div>
       </div>
     );
