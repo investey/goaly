@@ -603,15 +603,6 @@ function App() {
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
-      
-      if (event.error === 'not-allowed') {
-        alert('Microphone access is required for speech recognition. Please allow microphone access in your browser settings and try again.');
-      } else if (event.error === 'no-speech') {
-        console.log('No speech detected, continuing...');
-      } else {
-        console.error('Speech recognition error:', event.error);
-      }
-      
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
         // Restart recognition for these recoverable errors in continuous mode
         if (isContinuousMode) {
@@ -1400,6 +1391,7 @@ function App() {
               </div>
             ))
           )}
+          <span>Microphone access denied. Please enable microphone permissions in your browser settings to use voice commands.</span>
         </div>
       </div>
     );
