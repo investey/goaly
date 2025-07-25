@@ -2,6 +2,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Letter sparkle and glow effects */
+.letter-fill {
+  background: linear-gradient(45deg, #ff69b4, #ff1493, #ff69b4, #ff1493, #ff69b4, #ff1493);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  animation: gradientShift 3.5s ease-in-out infinite;
+}
+
+.letter-sparkle {
+  position: relative;
+}
+
+.letter-glow {
+  filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.8)) 
+          drop-shadow(0 0 20px rgba(255, 20, 147, 0.6)) 
+          drop-shadow(0 0 30px rgba(255, 105, 180, 0.4));
+}
+
+/* Letter effects for Wealth (Green) */
+.letter-fill-wealth {
+  background: linear-gradient(45deg, #10b981, #059669, #10b981, #059669, #10b981, #059669);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  animation: gradientShift 3.5s ease-in-out infinite;
+}
+
+.letter-glow-wealth {
+  filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.8)) 
+          drop-shadow(0 0 20px rgba(5, 150, 105, 0.6)) 
+          drop-shadow(0 0 30px rgba(16, 185, 129, 0.4));
+}
+
+/* Letter effects for Health (Blue) */
+.letter-fill-health {
+  background: linear-gradient(45deg, #3b82f6, #2563eb, #3b82f6, #2563eb, #3b82f6, #2563eb);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  animation: gradientShift 3.5s ease-in-out infinite;
+}
+
+.letter-glow-health {
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8)) 
+          drop-shadow(0 0 20px rgba(37, 99, 235, 0.6)) 
+          drop-shadow(0 0 30px rgba(59, 130, 246, 0.4));
+}
+
+/* Letter effects for Learning (Yellow) */
+.letter-fill-learning {
+  background: linear-gradient(45deg, #fbbf24, #f59e0b, #fbbf24, #f59e0b, #fbbf24, #f59e0b);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+  animation: gradientShift 3.5s ease-in-out infinite;
+}
+
+.letter-glow-learning {
+  filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.8)) 
+          drop-shadow(0 0 20px rgba(245, 158, 11, 0.6)) 
+          drop-shadow(0 0 30px rgba(251, 191, 36, 0.4));
+}
+
+/* Keyframe animations */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes heartBurst {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--end-x)), calc(-50% + var(--end-y))) scale(1);
+    opacity: 0;
+  }
+}
+
 body {
   margin: 0;
   padding: 0;
