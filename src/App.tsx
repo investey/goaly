@@ -221,7 +221,7 @@ const App: React.FC = () => {
     }
   };
 
-  // Check if current affirmation is bookmarked
+  // Check if current affirmation is bookmarked - FIXED VERSION
   const isBookmarked = bookmarkedAffirmations.some(a => a.text === currentAffirmation.text);
 
   const handleBookmark = () => {
