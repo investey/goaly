@@ -465,7 +465,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Rate limit keyboard actions
       if (!rateLimiter.isAllowed('keyboard', 50, 60000)) {
-        return;
+        getNewAffirmation();
       }
       
       if (event.key === 'ArrowUp') {
@@ -687,10 +687,6 @@ function App() {
     }
   };
 
-  const triggerBurstAnimation = () => {
-    setShowHearts(true);
-  };
-
   const handleMicrophoneClick = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition not supported in this browser');
@@ -699,7 +695,7 @@ function App() {
 
     setIsProcessing(true);
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
     recognition.continuous = true;
@@ -708,7 +704,7 @@ function App() {
 
     let hasProcessed = false;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       if (hasProcessed) return;
       hasProcessed = true;
 
@@ -982,10 +978,6 @@ function App() {
     }, 300);
   };
 
-  const goToPreviousAffirmation = () => {
-    goToPreviousPhrase();
-  };
-
   const handleBookmark = () => {
     // Rate limit bookmark actions
     if (!rateLimiter.isAllowed('bookmark', 30, 60000)) {
@@ -1087,26 +1079,6 @@ function App() {
   const handleDeleteClick = (phrase: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the bookmark click
     setDeleteConfirmation(phrase);
-  };
-
-  const handleCategoryFilter = (category: string) => {
-    // Filter affirmations by category
-    const filteredAffirmations = allAffirmations.filter(affirmation => 
-      affirmation.category === category
-    );
-    
-    if (filteredAffirmations.length > 0) {
-      const randomAffirmation = filteredAffirmations[Math.floor(Math.random() * filteredAffirmations.length)];
-      setCurrentAffirmation(randomAffirmation);
-      setCurrentView('main');
-      setShowPlusPopup(false);
-      // Reset history and interactions for clean state
-      setAffirmationHistory([]);
-      setCurrentHistoryIndex(-1);
-      setClickedLetters(new Set());
-      setShowHearts(false);
-      setIsResetting(false);
-    }
   };
 
   // Handle URL parameters for shared phrases
@@ -1391,7 +1363,6 @@ function App() {
               </div>
             ))
           )}
-          <span>Microphone access denied. Please enable microphone permissions in your browser settings to use voice commands.</span>
         </div>
       </div>
     );
@@ -1585,15 +1556,23 @@ function App() {
             />
           </svg>
         </button>
-      </div>
+        
+        {/* Bookmark icon */}
+        <button
+          onClick={handleBookmark}
+          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+        >
+          {isBookmarked ? (
+            <BookmarkCheck className="w-6 h-6 text-blue-500" />
+          ) : (
+            <Bookmark className="w-6 h-6 text-gray-600" />
+          )}
+        </button>
 
-      {/* Right edge icons */}
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 z-20">
         {/* Share icon */}
         <button
           onClick={handleShare}
           className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-          aria-label="Share affirmation"
         >
           <Link className="w-6 h-6 text-gray-600" />
         </button>
@@ -1613,52 +1592,20 @@ function App() {
             {/* Close X button */}
             <button
               onClick={() => setShowPlusPopup(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
             
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Choose Category</h3>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
-                onClick={() => handleCategoryFilter('love')}
-                className="bg-pink-100 text-pink-800 px-4 py-3 rounded-lg font-medium hover:bg-pink-200 transition-colors"
-              >
-                #Love
-              </button>
-              <button
-                onClick={() => handleCategoryFilter('wealth')}
-                className="bg-green-100 text-green-800 px-4 py-3 rounded-lg font-medium hover:bg-green-200 transition-colors"
-              >
-                #Wealth
-              </button>
-              <button
-                onClick={() => handleCategoryFilter('health')}
-                className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors"
-              >
-                #Health
-              </button>
-              <button
-                onClick={() => handleCategoryFilter('learning')}
-                className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded-lg font-medium hover:bg-yellow-200 transition-colors"
-              >
-                #Learning
-              </button>
-              <button
-                onClick={() => handleCategoryFilter('natural')}
-                className="bg-purple-100 text-purple-800 px-4 py-3 rounded-lg font-medium hover:bg-purple-200 transition-colors"
-              >
-                #Natural
-              </button>
-            </div>
-            
+            {/* Content */}
             <div className="pr-8">
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-800 leading-relaxed">
                 Thank you for your interest in submitting a goal or affirmation to share on the app! 
                 Since we're still getting set up, please submit it via the help desk{' '}
                 <a 
-                  href="https://help.example.com"
+                  href="https://bit.ly/glysupport" 
                   target="_blank" 
+                  rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 underline"
                 >
                   here
