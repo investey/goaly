@@ -1584,23 +1584,35 @@ function App() {
             />
           </svg>
         </button>
-        
-        {/* Bookmark icon */}
+      </div>
+
+      {/* Right side icons */}
+      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 z-10">
+        {/* Bookmark button */}
         <button
           onClick={handleBookmark}
-          className="p-3 bg-white bg-opacity-20 rounded-full hover:scale-110 transition-all duration-200"
+          className={`p-3 rounded-full shadow-lg transition-all duration-200 ${
+            isBookmarked 
+              ? 'bg-blue-500 text-white' 
+              : 'bg-white text-gray-600 hover:bg-gray-50'
+          }`}
+          aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
         >
           {isBookmarked ? (
-            <BookmarkCheck className="w-6 h-6 text-blue-500" />
+            <div className="flex items-center justify-center">
+              <Bookmark className="w-5 h-5 fill-current" />
+              <Check className="w-3 h-3 absolute" />
+            </div>
           ) : (
-            <Bookmark className="w-6 h-6 text-gray-600" />
+            <Bookmark className="w-5 h-5" />
           )}
         </button>
 
-        {/* Share icon */}
+        {/* Share button */}
         <button
           onClick={handleShare}
           className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+          aria-label="Share affirmation"
         >
           <Link className="w-6 h-6 text-gray-600" />
         </button>
