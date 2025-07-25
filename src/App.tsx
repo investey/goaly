@@ -1584,7 +1584,6 @@ function App() {
             />
           </svg>
         </button>
-      </div>
 
       {/* Right edge icons */}
       <div className="fixed right-4 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4 z-20">
