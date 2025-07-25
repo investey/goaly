@@ -1,6 +1,3 @@
-// GOALY APP - COMPLETE BACKUP CODE
-// This is the full working App.tsx component
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Bookmark, 
@@ -224,6 +221,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Check if current affirmation is bookmarked
   const isBookmarked = bookmarkedAffirmations.some(a => a.text === currentAffirmation.text);
 
   const handleBookmark = () => {
@@ -232,8 +230,10 @@ const App: React.FC = () => {
     }
 
     if (isBookmarked) {
+      // Remove from bookmarks
       setBookmarkedAffirmations(prev => prev.filter(a => a.text !== currentAffirmation.text));
     } else {
+      // Add to bookmarks
       setBookmarkedAffirmations(prev => [...prev, currentAffirmation]);
     }
   };
